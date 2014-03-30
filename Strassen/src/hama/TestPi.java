@@ -1,4 +1,5 @@
 package hama;
+
 import java.io.IOException;
 
 import org.apache.commons.logging.Log;
