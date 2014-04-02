@@ -112,8 +112,9 @@ public class StrassenMultiply {
 		}
 
 		private void beginJob(Matrix a, Matrix b, String jobId, BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer) {
+			System.out.println(jobId);
+			a.print();b.print();
 			try {
-				Integer slaveCounter = peer.getPeerIndex();
 				if (a.size()==1){
 					Matrix result = a.multiply(b);
 					JobMessage doneJob = new JobMessage(result,jobId,DONE_JOB);
@@ -128,12 +129,18 @@ public class StrassenMultiply {
 					JobMessage doJob4 = new JobMessage(a22,b21.diff(b11),jobId+"4",DO_JOB,peerIndex);
 					JobMessage doJob5 = new JobMessage(a11.sum(a12),b22,jobId+"5",DO_JOB,peerIndex);
 					JobMessage doJob6 = new JobMessage(a21.diff(a11),b11.sum(b12),jobId+"6",DO_JOB,peerIndex);
-					peer.send(getNextPeer(slaveCounter,peer), doJob1);
-					peer.send(getNextPeer(slaveCounter,peer), doJob2);
-					peer.send(getNextPeer(slaveCounter,peer), doJob3);
-					peer.send(getNextPeer(slaveCounter,peer), doJob4);
-					peer.send(getNextPeer(slaveCounter,peer), doJob5);
-					peer.send(getNextPeer(slaveCounter,peer), doJob6);
+					int nextPeer = getNextPeer(peer.getPeerIndex(), peer);
+					peer.send(peer.getPeerName(nextPeer), doJob1);
+					nextPeer = getNextPeer(nextPeer, peer);
+					peer.send(peer.getPeerName(nextPeer), doJob2);
+					nextPeer = getNextPeer(nextPeer, peer);
+					peer.send(peer.getPeerName(nextPeer), doJob3);
+					nextPeer = getNextPeer(nextPeer, peer);
+					peer.send(peer.getPeerName(nextPeer), doJob4);
+					nextPeer = getNextPeer(nextPeer, peer);
+					peer.send(peer.getPeerName(nextPeer), doJob5);
+					nextPeer = getNextPeer(nextPeer, peer);
+					peer.send(peer.getPeerName(nextPeer), doJob6);
 					jobMasters.put(jobId+"7", peer.getPeerIndex());
 					beginJob(a12.diff(a22), b21.sum(b22), jobId+"7", peer);
 				}
@@ -143,12 +150,12 @@ public class StrassenMultiply {
 			
 		}
 
-		private String getNextPeer(Integer slaveCounter,BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer) {
-			slaveCounter = (slaveCounter+1)%peer.getNumPeers();
-			if (slaveCounter==peer.getPeerIndex()){
-				return getNextPeer(slaveCounter, peer);
+		private int getNextPeer(int slaveCounter,BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer) {
+			int nextPeer = (slaveCounter+1)%peer.getNumPeers();
+			if (nextPeer==peer.getPeerIndex()){
+				return getNextPeer(nextPeer, peer);
 			} else {
-				return peer.getPeerName(slaveCounter);
+				return nextPeer;
 			}
 		}
 		
@@ -205,7 +212,7 @@ public class StrassenMultiply {
 		bsp.setBspClass(StrassenBSP.class);
 		bsp.setOutputPath(new Path("src/out"));
 
-		//bsp.setNumBspTask(Integer.parseInt(conf.get("bsp.peers.num")));
+		bsp.setNumBspTask(4);
 		if (bsp.waitForCompletion(true)) {
 			System.out.println("Job Finished");
 		}
