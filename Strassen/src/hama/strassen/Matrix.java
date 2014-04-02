@@ -1,45 +1,47 @@
 package hama.strassen;
 
+import java.util.Arrays;
+
 public class Matrix {
-	
+
 	private double[][] values;
 	private int nbRows;
 	private int nbCols;
-	
-	public Matrix(double[][] values, int nbRows, int nbCols){
+
+	public Matrix(double[][] values, int nbRows, int nbCols) {
 		this.values = values;
 		this.nbRows = nbRows;
 		this.nbCols = nbCols;
 	}
-	
+
 	public Matrix(Matrix c11, Matrix c12, Matrix c21, Matrix c22) {
-		nbRows=c11.getNbRows()+c12.getNbRows();
-		nbCols=c11.getNbCols()+c21.getNbCols();
+		nbRows = c11.getNbRows() + c12.getNbRows();
+		nbCols = c11.getNbCols() + c21.getNbCols();
 		values = new double[nbRows][nbCols];
 
-		for(int i=0;i<c11.getNbRows();i++){
-			for(int j=0;j<c11.getNbCols();j++){
-				values[i][j]=c11.get(i, j);
+		for (int i = 0; i < c11.getNbRows(); i++) {
+			for (int j = 0; j < c11.getNbCols(); j++) {
+				values[i][j] = c11.get(i, j);
 			}
 		}
-		for(int i=c11.getNbRows();i<nbRows;i++){
-			for(int j=0;j<c21.getNbCols();j++){
-				values[i][j]=c21.get(i, j);
+		for (int i = c11.getNbRows(); i < nbRows; i++) {
+			for (int j = 0; j < c21.getNbCols(); j++) {
+				values[i][j] = c21.get(i, j);
 			}
 		}
-		for(int i=0;i<c12.getNbRows();i++){
-			for(int j=c11.getNbCols();j<nbCols;j++){
-				values[i][j]=c11.get(i, j);
+		for (int i = 0; i < c12.getNbRows(); i++) {
+			for (int j = c11.getNbCols(); j < nbCols; j++) {
+				values[i][j] = c11.get(i, j);
 			}
 		}
-		for(int i=c12.getNbRows();i<nbRows;i++){
-			for(int j=c21.getNbCols();j<nbCols;j++){
-				values[i][j]=c11.get(i, j);
+		for (int i = c12.getNbRows(); i < nbRows; i++) {
+			for (int j = c21.getNbCols(); j < nbCols; j++) {
+				values[i][j] = c11.get(i, j);
 			}
 		}
 	}
 
-	public double get(int i, int j){
+	public double get(int i, int j) {
 		return values[i][j];
 	}
 
@@ -57,6 +59,7 @@ public class Matrix {
 
 	/**
 	 * True only if square matrix
+	 * 
 	 * @return
 	 */
 	public int size() {
@@ -64,15 +67,15 @@ public class Matrix {
 	}
 
 	public Matrix multiply(Matrix b) {
-		double m[][] = {{this.get(0,0)*b.get(0, 0)}};
+		double m[][] = { { this.get(0, 0) * b.get(0, 0) } };
 		return new Matrix(m, 1, 1);
 	}
 
 	public Matrix sum(Matrix a22) {
 		Matrix c = a22;
-		for(int i=0;i<nbRows;i++){
-			for(int j=0;j<nbCols;j++){
-				c.setValue(i, j, c.get(i, j)+this.get(i, j));
+		for (int i = 0; i < nbRows; i++) {
+			for (int j = 0; j < nbCols; j++) {
+				c.setValue(i, j, c.get(i, j) + this.get(i, j));
 			}
 		}
 		return c;
@@ -80,15 +83,52 @@ public class Matrix {
 
 	public Matrix diff(Matrix a22) {
 		Matrix c = a22;
-		for(int i=0;i<nbRows;i++){
-			for(int j=0;j<nbCols;j++){
-				c.setValue(i, j, this.get(i, j)-c.get(i, j));
+		for (int i = 0; i < nbRows; i++) {
+			for (int j = 0; j < nbCols; j++) {
+				c.setValue(i, j, this.get(i, j) - c.get(i, j));
 			}
 		}
 		return null;
 	}
-	
-	public void setValue(int i, int j, double value){
-		values[i][j]=value;
+
+	public void setValue(int i, int j, double value) {
+		values[i][j] = value;
+	}
+
+	public Matrix get11() {
+		double[][] m = new double[nbRows / 2][nbCols / 2];
+		for (int i = 0; i < nbRows / 2; i++) {
+			m[i] = Arrays.copyOfRange(values[i], 0, nbCols / 2);// TODO
+																// nbRows/2-1?
+		}
+		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
+		return m11;
+	}
+
+	public Matrix get21() {
+		double[][] m = new double[nbRows / 2][nbCols / 2];
+		for (int i = 0; i < nbRows / 2; i++) {
+			m[i] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);// TODO nbRows/2-1?
+		}
+		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
+		return m11;
+	}
+
+	public Matrix get12() {
+		double[][] m = new double[nbRows / 2][nbCols / 2];
+		for (int i =  nbRows / 2; i < nbRows ; i++) {
+			m[i] = Arrays.copyOfRange(values[i], 0, nbCols / 2);// TODO nbRows/2-1?
+		}
+		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
+		return m11;
+	}
+
+	public Matrix get22() {
+		double[][] m = new double[nbRows / 2][nbCols / 2];
+		for (int i =  nbRows / 2; i < nbRows ; i++) {
+			m[i] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);// TODO nbRows/2-1?
+		}
+		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
+		return m11;
 	}
 }
