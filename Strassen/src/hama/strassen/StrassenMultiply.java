@@ -1,14 +1,26 @@
 package hama.strassen;
 
+import hama.TestPi;
+import hama.TestPi.MyEstimator;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
+import org.apache.hama.bsp.BSPJob;
+import org.apache.hama.bsp.BSPJobClient;
 import org.apache.hama.bsp.BSPPeer;
+import org.apache.hama.bsp.ClusterStatus;
+import org.apache.hama.bsp.FileOutputFormat;
+import org.apache.hama.bsp.NullInputFormat;
+import org.apache.hama.bsp.TextOutputFormat;
 import org.apache.hama.bsp.sync.SyncException;
 import org.apache.hama.commons.io.VectorWritable;
 
@@ -158,6 +170,56 @@ public class StrassenMultiply {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public static void main(String[] args) throws Exception {
+		HamaConfiguration conf = new HamaConfiguration();
+		BSPJobClient jobClient = new BSPJobClient(conf);
+		int size;
+		String path_a;
+		String path_b;
+		String path_c;
+		if (args.length > 0) {
+			if (args.length == 5) {
+				conf.setInt("bsp.peers.num", Integer.parseInt(args[0]));
+				size = Integer.parseInt(args[1]);
+				path_a = args[2];
+				path_b = args[3];
+				path_c = args[4];
+
+			} else {
+				System.out.println("Wrong argument size!");
+				System.out.println("    Argument1=numBspTask");
+				System.out.println("    Argument2=matrices size ");
+				System.out.println("    Argument3=matrix A path ");
+				System.out.println("    Argument4=matrix B path ");
+				System.out.println("    Argument4=output matrix C path ");
+				return;
+			}
+		} else {
+			//default values
+			conf.setInt("bsp.peers.num", 3);
+			size=8;
+			path_a="A";
+			path_b="B";
+			path_c="C";
+			
+		}
+		
+		ClusterStatus cluster = jobClient.getClusterStatus(true);
+		BSPJob bsp = new BSPJob(conf, StrassenMultiply.class);
+		// Set the job name
+		bsp.setJobName("Pi Estimation Example");
+		bsp.setBspClass(MyEstimator.class);
+		bsp.setInputFormat(NullInputFormat.class);
+		bsp.setOutputKeyClass(Text.class);
+		bsp.setOutputValueClass(DoubleWritable.class);
+		bsp.setOutputFormat(TextOutputFormat.class);
+		bsp.setNumBspTask(Integer.parseInt(conf.get("bsp.peers.num")));
+		if (bsp.waitForCompletion(true)) {
+			System.out.println("Job Finished");
+		}
+		
 	}
 
 }
