@@ -41,8 +41,10 @@ public class Matrix{
 		}
 	}
 
-	public Matrix(int readInt, int readInt2) {
-		// TODO Auto-generated constructor stub
+	public Matrix(int nbRows, int nbCols) {
+		values = new double[nbRows][nbCols];
+		this.nbRows = nbRows;
+		this.nbCols = nbCols;
 	}
 
 	public double get(int i, int j) {
@@ -137,7 +139,7 @@ public class Matrix{
 	}
 
 	public void set(int row, int col, double readDouble) {
-		// TODO Auto-generated method stub
+		values[row][col]=readDouble;
 		
 	}
 }

@@ -96,6 +96,7 @@ public class StrassenMultiply {
 				doneJobs.remove(jobId);
 				if (jobId.equals("")){
 					sendFinish(peer);
+					Utils.writeMatrix(c.getValues(), new Path(path_c), peer.getConfiguration());
 				} else {
 					JobMessage doneJob = new JobMessage(c, jobId, DONE_JOB);
 					String peerName = peer.getPeerName(jobMasters.get(jobId));
@@ -116,7 +117,7 @@ public class StrassenMultiply {
 					peer.send(peerName,doneJob);
 				} else {
 					int peerIndex = peer.getPeerIndex();
-					Matrix a11=null,a12=null,a21=null,a22=null,b11=null,b12=null,b21=null,b22=null;
+					Matrix a11=a.get11(),a12=a.get12(),a21=a.get21(),a22=a.get22(),b11=b.get11(),b12=b.get12(),b21=b.get21(),b22=b.get22();
 					JobMessage doJob1 = new JobMessage(a11.sum(a22),b11.sum(b22),jobId+"1",DO_JOB,peerIndex);
 					JobMessage doJob2 = new JobMessage(a21.sum(a22),b11,jobId+"2",DO_JOB,peerIndex);
 					JobMessage doJob3 = new JobMessage(a11,b12.diff(b22),jobId+"3",DO_JOB,peerIndex);
