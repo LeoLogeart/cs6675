@@ -16,7 +16,7 @@ import org.apache.hama.commons.io.VectorWritable;
 
 public class StrassenMultiply {
 
-	private static class StrassenBSP
+	public static class StrassenBSP
 			extends
 			BSP<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> {
 		
@@ -111,10 +111,10 @@ public class StrassenMultiply {
 					Matrix a11=null,a12=null,a21=null,a22=null,b11=null,b12=null,b21=null,b22=null;
 					JobMessage doJob1 = new JobMessage(a11.sum(a22),b11.sum(b22),jobId+"1");
 					JobMessage doJob2 = new JobMessage(a21.sum(a22),b11,jobId+"2");
-					JobMessage doJob3 = new JobMessage(a11,b12.sum(b22),jobId+"3");
-					JobMessage doJob4 = new JobMessage(a22,b21.sum(b11),jobId+"4");
+					JobMessage doJob3 = new JobMessage(a11,b12.diff(b22),jobId+"3");
+					JobMessage doJob4 = new JobMessage(a22,b21.diff(b11),jobId+"4");
 					JobMessage doJob5 = new JobMessage(a11.sum(a12),b22,jobId+"5");
-					JobMessage doJob6 = new JobMessage(a21.sum(a11),b11.sum(b12),jobId+"6");
+					JobMessage doJob6 = new JobMessage(a21.diff(a11),b11.sum(b12),jobId+"6");
 					peer.send(getNextPeer(slaveCounter,peer), doJob1);
 					peer.send(getNextPeer(slaveCounter,peer), doJob2);
 					peer.send(getNextPeer(slaveCounter,peer), doJob3);

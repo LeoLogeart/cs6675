@@ -13,7 +13,30 @@ public class Matrix {
 	}
 	
 	public Matrix(Matrix c11, Matrix c12, Matrix c21, Matrix c22) {
-		// TODO Auto-generated constructor stub
+		nbRows=c11.getNbRows()+c12.getNbRows();
+		nbCols=c11.getNbCols()+c21.getNbCols();
+		values = new double[nbRows][nbCols];
+
+		for(int i=0;i<c11.getNbRows();i++){
+			for(int j=0;j<c11.getNbCols();j++){
+				values[i][j]=c11.get(i, j);
+			}
+		}
+		for(int i=c11.getNbRows();i<nbRows;i++){
+			for(int j=0;j<c21.getNbCols();j++){
+				values[i][j]=c21.get(i, j);
+			}
+		}
+		for(int i=0;i<c12.getNbRows();i++){
+			for(int j=c11.getNbCols();j<nbCols;j++){
+				values[i][j]=c11.get(i, j);
+			}
+		}
+		for(int i=c12.getNbRows();i<nbRows;i++){
+			for(int j=c21.getNbCols();j<nbCols;j++){
+				values[i][j]=c11.get(i, j);
+			}
+		}
 	}
 
 	public double get(int i, int j){
@@ -32,23 +55,40 @@ public class Matrix {
 		return nbCols;
 	}
 
+	/**
+	 * True only if square matrix
+	 * @return
+	 */
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return nbCols;
 	}
 
 	public Matrix multiply(Matrix b) {
-		// TODO Auto-generated method stub
-		return null;
+		double m[][] = {{this.get(0,0)*b.get(0, 0)}};
+		return new Matrix(m, 1, 1);
 	}
 
 	public Matrix sum(Matrix a22) {
-		// TODO Auto-generated method stub
-		return null;
+		Matrix c = a22;
+		for(int i=0;i<nbRows;i++){
+			for(int j=0;j<nbCols;j++){
+				c.setValue(i, j, c.get(i, j)+this.get(i, j));
+			}
+		}
+		return c;
 	}
 
 	public Matrix diff(Matrix a22) {
-		// TODO Auto-generated method stub
+		Matrix c = a22;
+		for(int i=0;i<nbRows;i++){
+			for(int j=0;j<nbCols;j++){
+				c.setValue(i, j, this.get(i, j)-c.get(i, j));
+			}
+		}
 		return null;
+	}
+	
+	public void setValue(int i, int j, double value){
+		values[i][j]=value;
 	}
 }
