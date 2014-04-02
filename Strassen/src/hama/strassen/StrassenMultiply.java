@@ -18,19 +18,17 @@ public class StrassenMultiply {
 			extends
 			BSP<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> {
 		
-		private String path_a;
-		private String path_b;
-		private String path_c;
-		private int nbRows;;
-		private int nbCols;
+		private String path_a = "src/a";
+		private String path_b = "src/b";
+		private String path_c = "src/c";
+		private int nbRows = 4;
+		private int nbCols = 4;
 		
 		private static final int DONE_JOB = 0;
 		private static final int DO_JOB = 1;
 		private static final int END =2;
 		
 		Map<String,Integer> jobMasters = new HashMap<String, Integer>();
-
-		//TODO SETUP to initialize attributes
 		
 		@Override
 		public void bsp(
