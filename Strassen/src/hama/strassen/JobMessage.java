@@ -15,6 +15,10 @@ public class JobMessage implements Writable{
 	private Matrix secondMatrix;
 	private int sender;
 	
+	public JobMessage(){
+		
+	}
+	
 	public JobMessage(Matrix result, String jobId, int type) {
 		this.result = result;
 		this.jobId = jobId;
@@ -54,13 +58,13 @@ public class JobMessage implements Writable{
 		case 2:
 			break;
 		default :
-				break;
+			break;
 		}
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.write(type);
+		out.writeInt(type);
 		switch (type){
 		case 0:
 			DoubleMatrixWritable.write(result, out);
@@ -69,15 +73,14 @@ public class JobMessage implements Writable{
 		case 1:
 			DoubleMatrixWritable.write(firstMatrix, out);
 			DoubleMatrixWritable.write(secondMatrix, out);
-			out.write(sender);
+			out.writeInt(sender);
 			out.writeBytes(jobId);
 			break;
 		case 2:
 			break;
 		default :
-				break;
+			break;
 		}
-		
 	}
 
 	public Matrix getFirstMatrix() {
