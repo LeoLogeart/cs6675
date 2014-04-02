@@ -190,4 +190,18 @@ public class Matrix{
 			return new Matrix(c11, c12, c21, c22);
 		}
 	}
+	
+	public Matrix mult(Matrix b) {
+		double[][] C = new double[getNbRows()][b.getNbCols()];
+
+		for (int i = 0; i < getNbRows(); i++) { // aRow
+			for (int j = 0; j < b.getNbCols(); j++) { // bColumn
+				for (int k = 0; k < getNbCols(); k++) { // aColumn
+					C[i][j] += get(i, k) * b.get(k, j);
+				}
+			}
+		}
+
+		return new Matrix(C, getNbRows(), b.getNbCols());
+	}
 }
