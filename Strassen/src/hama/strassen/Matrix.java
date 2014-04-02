@@ -166,4 +166,28 @@ public class Matrix{
 		// TODO Get block starting at (i,j) of size blockSize
 		return null;
 	}
+
+	public Matrix strassen(Matrix b) {
+		if (b.getNbRows() == 1) {
+			double[][] val = { { get(0, 0) * b.get(0, 0) } };
+			return new Matrix(val, 1, 1);
+		} else {
+			Matrix m1 = get11().sum(get22()).strassen(b.get11().sum(b.get22()));
+			Matrix m2 = get21().sum(get22()).strassen(b.get11());
+			Matrix m3 = get11().strassen(b.get12().diff(b.get22()));
+			Matrix m4 = get22().strassen(b.get21().diff(b.get11()));
+			Matrix m5 = get11().sum(get12()).strassen(b.get22());
+			Matrix m6 = get21().diff(get11())
+					.strassen(b.get11().sum(b.get12()));
+			Matrix m7 = get12().diff(get22())
+					.strassen(b.get21().sum(b.get22()));
+
+			Matrix c11 = m1.sum(m4).diff(m5).sum(m7);
+			Matrix c12 = m3.sum(m5);
+			Matrix c21 = m2.sum(m4);
+			Matrix c22 = m1.diff(m2).sum(m3).sum(m6);
+
+			return new Matrix(c11, c12, c21, c22);
+		}
+	}
 }
