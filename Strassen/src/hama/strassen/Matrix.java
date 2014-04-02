@@ -2,7 +2,7 @@ package hama.strassen;
 
 import java.util.Arrays;
 
-public class Matrix {
+public class Matrix{
 
 	private double[][] values;
 	private int nbRows;
@@ -39,6 +39,10 @@ public class Matrix {
 				values[i][j] = c11.get(i, j);
 			}
 		}
+	}
+
+	public Matrix(int readInt, int readInt2) {
+		// TODO Auto-generated constructor stub
 	}
 
 	public double get(int i, int j) {
@@ -130,5 +134,10 @@ public class Matrix {
 		}
 		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m11;
+	}
+
+	public void set(int row, int col, double readDouble) {
+		// TODO Auto-generated method stub
+		
 	}
 }

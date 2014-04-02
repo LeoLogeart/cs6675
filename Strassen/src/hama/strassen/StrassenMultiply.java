@@ -1,7 +1,5 @@
 package hama.strassen;
 
-import hama.strassen.JobMessage.MessageType;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +23,10 @@ public class StrassenMultiply {
 		private String path_c;
 		private int nbRows;;
 		private int nbCols;
+		
+		private static final int DONE_JOB = 0;
+		private static final int DO_JOB = 1;
+		private static final int END =2;
 		
 		Map<String,Integer> jobMasters = new HashMap<String, Integer>();
 
@@ -95,7 +97,7 @@ public class StrassenMultiply {
 				if (jobId.equals("")){
 					sendFinish(peer);
 				} else {
-					JobMessage doneJob = new JobMessage(c, jobId, MessageType.DONE_JOB);
+					JobMessage doneJob = new JobMessage(c, jobId, DONE_JOB);
 					String peerName = peer.getPeerName(jobMasters.get(jobId));
 					peer.send(peerName,doneJob);
 				}
@@ -109,17 +111,18 @@ public class StrassenMultiply {
 				Integer slaveCounter = peer.getPeerIndex();
 				if (a.size()==1){
 					Matrix result = a.multiply(b);
-					JobMessage doneJob = new JobMessage(result,jobId,MessageType.DONE_JOB);
+					JobMessage doneJob = new JobMessage(result,jobId,DONE_JOB);
 					String peerName = peer.getPeerName(jobMasters.get(jobId));
 					peer.send(peerName,doneJob);
 				} else {
+					int peerIndex = peer.getPeerIndex();
 					Matrix a11=null,a12=null,a21=null,a22=null,b11=null,b12=null,b21=null,b22=null;
-					JobMessage doJob1 = new JobMessage(a11.sum(a22),b11.sum(b22),jobId+"1");
-					JobMessage doJob2 = new JobMessage(a21.sum(a22),b11,jobId+"2");
-					JobMessage doJob3 = new JobMessage(a11,b12.diff(b22),jobId+"3");
-					JobMessage doJob4 = new JobMessage(a22,b21.diff(b11),jobId+"4");
-					JobMessage doJob5 = new JobMessage(a11.sum(a12),b22,jobId+"5");
-					JobMessage doJob6 = new JobMessage(a21.diff(a11),b11.sum(b12),jobId+"6");
+					JobMessage doJob1 = new JobMessage(a11.sum(a22),b11.sum(b22),jobId+"1",DO_JOB,peerIndex);
+					JobMessage doJob2 = new JobMessage(a21.sum(a22),b11,jobId+"2",DO_JOB,peerIndex);
+					JobMessage doJob3 = new JobMessage(a11,b12.diff(b22),jobId+"3",DO_JOB,peerIndex);
+					JobMessage doJob4 = new JobMessage(a22,b21.diff(b11),jobId+"4",DO_JOB,peerIndex);
+					JobMessage doJob5 = new JobMessage(a11.sum(a12),b22,jobId+"5",DO_JOB,peerIndex);
+					JobMessage doJob6 = new JobMessage(a21.diff(a11),b11.sum(b12),jobId+"6",DO_JOB,peerIndex);
 					peer.send(getNextPeer(slaveCounter,peer), doJob1);
 					peer.send(getNextPeer(slaveCounter,peer), doJob2);
 					peer.send(getNextPeer(slaveCounter,peer), doJob3);
@@ -147,7 +150,7 @@ public class StrassenMultiply {
 		private void sendFinish(BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer){
 			try {
 				for (String peerName : peer.getAllPeerNames()){
-					JobMessage end = new JobMessage(MessageType.END);
+					JobMessage end = new JobMessage(END);
 					peer.send(peerName,end);
 				}
 			} catch (IOException e) {
