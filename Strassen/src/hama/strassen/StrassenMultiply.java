@@ -1,23 +1,17 @@
 package hama.strassen;
 
-import hama.TestPi.MyEstimator;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPJobClient;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.ClusterStatus;
-import org.apache.hama.bsp.NullInputFormat;
-import org.apache.hama.bsp.TextOutputFormat;
 import org.apache.hama.bsp.sync.SyncException;
 import org.apache.hama.commons.io.VectorWritable;
 
@@ -128,7 +122,6 @@ public class StrassenMultiply {
 				} else {
 					int peerIndex = peer.getPeerIndex();
 					Matrix a11=a.get11(),a12=a.get12(),a21=a.get21(),a22=a.get22(),b11=b.get11(),b12=b.get12(),b21=b.get21(),b22=b.get22();
-					
 					JobMessage doJob1 = new JobMessage(a11.sum(a22),b11.sum(b22),jobId+"1",DO_JOB,peerIndex);
 					JobMessage doJob2 = new JobMessage(a21.sum(a22),b11,jobId+"2",DO_JOB,peerIndex);
 					JobMessage doJob3 = new JobMessage(a11,b12.diff(b22),jobId+"3",DO_JOB,peerIndex);
