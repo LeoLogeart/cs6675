@@ -1,4 +1,4 @@
-package hama.strassen;
+package hama.strassenold;
 
 import java.util.Arrays;
 
@@ -160,10 +160,5 @@ public class Matrix{
 			}
 			System.out.println();
 		}
-	}
-
-	public Matrix getBlock(int i, int j, int blockSize) {
-		// TODO Get block starting at (i,j) of size blockSize
-		return null;
 	}
 }

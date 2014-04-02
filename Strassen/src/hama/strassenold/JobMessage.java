@@ -1,4 +1,4 @@
-package hama.strassen;
+package hama.strassenold;
 
 import java.io.DataInput;
 import java.io.DataOutput;
