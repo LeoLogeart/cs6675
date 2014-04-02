@@ -1,13 +1,11 @@
 package hama.strassen;
 
-import hama.TestPi;
 import hama.TestPi.MyEstimator;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -18,7 +16,6 @@ import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPJobClient;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.ClusterStatus;
-import org.apache.hama.bsp.FileOutputFormat;
 import org.apache.hama.bsp.NullInputFormat;
 import org.apache.hama.bsp.TextOutputFormat;
 import org.apache.hama.bsp.sync.SyncException;
@@ -59,6 +56,9 @@ public class StrassenMultiply {
 			boolean finished = false;
 			while(!finished){
 				JobMessage mes = peer.getCurrentMessage();
+				while(mes==null){
+					mes = peer.getCurrentMessage();
+				}
 				String jobId;
 				switch(mes.getType()){
 				case DO_JOB:
@@ -128,6 +128,7 @@ public class StrassenMultiply {
 				} else {
 					int peerIndex = peer.getPeerIndex();
 					Matrix a11=a.get11(),a12=a.get12(),a21=a.get21(),a22=a.get22(),b11=b.get11(),b12=b.get12(),b21=b.get21(),b22=b.get22();
+					
 					JobMessage doJob1 = new JobMessage(a11.sum(a22),b11.sum(b22),jobId+"1",DO_JOB,peerIndex);
 					JobMessage doJob2 = new JobMessage(a21.sum(a22),b11,jobId+"2",DO_JOB,peerIndex);
 					JobMessage doJob3 = new JobMessage(a11,b12.diff(b22),jobId+"3",DO_JOB,peerIndex);
@@ -207,13 +208,11 @@ public class StrassenMultiply {
 		ClusterStatus cluster = jobClient.getClusterStatus(true);
 		BSPJob bsp = new BSPJob(conf, StrassenMultiply.class);
 		// Set the job name
-		bsp.setJobName("Pi Estimation Example");
-		bsp.setBspClass(MyEstimator.class);
-		bsp.setInputFormat(NullInputFormat.class);
-		bsp.setOutputKeyClass(Text.class);
-		bsp.setOutputValueClass(DoubleWritable.class);
-		bsp.setOutputFormat(TextOutputFormat.class);
-		bsp.setNumBspTask(Integer.parseInt(conf.get("bsp.peers.num")));
+		bsp.setJobName("Strassen Multiply");
+		bsp.setBspClass(StrassenBSP.class);
+		bsp.setOutputPath(new Path("src/out"));
+
+		//bsp.setNumBspTask(Integer.parseInt(conf.get("bsp.peers.num")));
 		if (bsp.waitForCompletion(true)) {
 			System.out.println("Job Finished");
 		}
