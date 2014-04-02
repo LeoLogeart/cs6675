@@ -47,6 +47,16 @@ public class Matrix{
 		this.nbCols = nbCols;
 	}
 
+	public Matrix(Matrix a) {
+		this.nbCols=a.getNbCols();
+		this.nbRows=a.getNbRows();
+		double[][] m = new double[nbRows][nbCols];
+		for (int i = 0 ; i < nbRows ; i++) {
+			m[i] = Arrays.copyOfRange(a.getValues()[i], 0, nbCols);
+		}
+		this.values=a.getValues();
+	}
+
 	public double get(int i, int j) {
 		return values[i][j];
 	}
@@ -77,8 +87,9 @@ public class Matrix{
 		return new Matrix(m, 1, 1);
 	}
 
-	public Matrix sum(Matrix a22) {
-		Matrix c = a22;
+	public Matrix sum(Matrix a) {
+		Matrix c = new Matrix(a);
+		
 		for (int i = 0; i < nbRows; i++) {
 			for (int j = 0; j < nbCols; j++) {
 				c.setValue(i, j, c.get(i, j) + this.get(i, j));
@@ -87,14 +98,14 @@ public class Matrix{
 		return c;
 	}
 
-	public Matrix diff(Matrix a22) {
-		Matrix c = a22;
+	public Matrix diff(Matrix a) {
+		Matrix c = new Matrix(a);
 		for (int i = 0; i < nbRows; i++) {
 			for (int j = 0; j < nbCols; j++) {
 				c.setValue(i, j, this.get(i, j) - c.get(i, j));
 			}
 		}
-		return null;
+		return c;
 	}
 
 	public void setValue(int i, int j, double value) {
@@ -104,7 +115,7 @@ public class Matrix{
 	public Matrix get11() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i = 0; i < nbRows / 2; i++) {
-			m[i] = Arrays.copyOfRange(values[i], 0, nbCols / 2-1);// TODO
+			m[i] = Arrays.copyOfRange(values[i], 0, nbCols / 2);// TODO
 																// nbRows/2-1?
 		}
 		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
@@ -114,28 +125,28 @@ public class Matrix{
 	public Matrix get12() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i = 0; i < nbRows / 2; i++) {
-			m[i] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols-1);// TODO nbRows/2-1?
+			m[i] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);// TODO nbRows/2-1?
 		}
-		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
-		return m11;
+		Matrix m12 = new Matrix(m, nbRows / 2, nbCols / 2);
+		return m12;
 	}
 
 	public Matrix get21() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i =  nbRows / 2; i < nbRows ; i++) {
-			m[i-nbRows/2] = Arrays.copyOfRange(values[i], 0, nbCols / 2 -1);// TODO nbRows/2-1?
+			m[i-nbRows/2] = Arrays.copyOfRange(values[i], 0, nbCols / 2 );// TODO nbRows/2-1?
 		}
-		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
-		return m11;
+		Matrix m21 = new Matrix(m, nbRows / 2, nbCols / 2);
+		return m21;
 	}
 
 	public Matrix get22() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i =  nbRows / 2; i < nbRows ; i++) {
-			m[i-nbRows/2] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols-1);// TODO nbRows/2-1?
+			m[i-nbRows/2] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);// TODO nbRows/2-1?
 		}
-		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
-		return m11;
+		Matrix m22 = new Matrix(m, nbRows / 2, nbCols / 2);
+		return m22;
 	}
 
 	public void set(int row, int col, double readDouble) {
