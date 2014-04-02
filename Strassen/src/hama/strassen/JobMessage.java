@@ -39,12 +39,44 @@ public class JobMessage implements Writable{
 	
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		
+		type = in.readInt();
+		switch (type){
+		case 0:
+			result = DoubleMatrixWritable.read(in);
+			jobId = in.readLine();
+			break;
+		case 1:
+			firstMatrix = DoubleMatrixWritable.read(in);
+			secondMatrix = DoubleMatrixWritable.read(in);
+			sender = in.readInt();
+			jobId = in.readLine();
+			break;
+		case 2:
+			break;
+		default :
+				break;
+		}
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		// TODO Auto-generated method stub
+		out.write(type);
+		switch (type){
+		case 0:
+			DoubleMatrixWritable.write(result, out);
+			out.writeBytes(jobId);
+			break;
+		case 1:
+			DoubleMatrixWritable.write(firstMatrix, out);
+			DoubleMatrixWritable.write(secondMatrix, out);
+			out.write(sender);
+			out.writeBytes(jobId);
+			break;
+		case 2:
+			break;
+		default :
+				break;
+		}
 		
 	}
 
