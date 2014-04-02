@@ -18,14 +18,14 @@ public class ResultMessage implements Writable{
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		
-		
+		sender = in.readInt();
+		result = DoubleMatrixWritable.read(in);
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		// TODO Auto-generated method stub
-		
+		out.writeInt(sender);
+		DoubleMatrixWritable.write(result, out);	
 	}
 
 	public int getSender() {

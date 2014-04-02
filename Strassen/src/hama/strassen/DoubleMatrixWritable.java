@@ -36,7 +36,7 @@ public class DoubleMatrixWritable implements Writable {
 		Matrix mat = new Matrix(in.readInt(), in.readInt());
 		for (int row = 0; row < mat.getNbRows(); row++) {
 			for (int col = 0; col < mat.getNbCols(); col++) {
-				mat.set(row, col, in.readDouble());
+				mat.setValue(row, col, in.readDouble());
 			}
 		}
 		return mat;

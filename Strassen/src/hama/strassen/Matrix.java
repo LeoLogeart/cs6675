@@ -26,7 +26,7 @@ public class Matrix{
 		}
 		for (int i = c11.getNbRows(); i < nbRows; i++) {
 			for (int j = 0; j < c21.getNbCols(); j++) {
-				values[i][j] = c21.get(i, j);
+				values[i][j] = c21.get(i, j); //TODO
 			}
 		}
 		for (int i = 0; i < c12.getNbRows(); i++) {
@@ -148,10 +148,6 @@ public class Matrix{
 		Matrix m22 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m22;
 	}
-
-	public void set(int row, int col, double readDouble) {
-		values[row][col]=readDouble;
-	}
 	
 	public void print(){
 		for (int i=0;i<nbRows;i++){
@@ -162,9 +158,14 @@ public class Matrix{
 		}
 	}
 
-	public Matrix getBlock(int i, int j, int blockSize) {
-		// TODO Get block starting at (i,j) of size blockSize
-		return null;
+	public Matrix getBlock(int begI, int begJ, int blockSize) {
+		Matrix block = new Matrix(blockSize,blockSize);
+		for (int i=begI;i<begI+blockSize;i++){
+			for (int j=begJ;j<begJ+blockSize;j++){
+				block.setValue(i-begI,j-begJ,values[i][j]);
+			}
+		}
+		return block;
 	}
 
 	public Matrix strassen(Matrix b) {
