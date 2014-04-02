@@ -1,5 +1,7 @@
 package hama.strassen;
 
+import hama.strassen.JobMessage.MessageType;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -15,6 +17,10 @@ public class JobMessage implements Writable{
 	}
 
 	public JobMessage(Matrix sum, Matrix sum2, String string) {
+		// TODO Auto-generated constructor stub
+	}
+
+	public JobMessage(MessageType end) {
 		// TODO Auto-generated constructor stub
 	}
 

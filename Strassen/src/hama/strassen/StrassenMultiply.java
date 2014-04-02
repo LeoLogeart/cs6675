@@ -25,6 +25,8 @@ public class StrassenMultiply {
 		private String path_c;
 		private int nbRows;;
 		private int nbCols;
+		
+		Map<String,Integer> jobMasters = new HashMap<String, Integer>();
 
 		//TODO SETUP to initialize attributes
 		
@@ -33,7 +35,6 @@ public class StrassenMultiply {
 				BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer)
 				throws IOException, SyncException, InterruptedException {
 			Map<String,Map<String,Matrix>> doneJobs = new HashMap<String, Map<String,Matrix>>();
-			Map<String,Integer> jobMasters = new HashMap<String, Integer>();
 			if (peer.getPeerIndex()==0){
 				HamaConfiguration conf = peer.getConfiguration();
 				double[][] aValues = Utils.readMatrix(new Path(path_a), conf, nbRows, nbCols);
@@ -41,7 +42,7 @@ public class StrassenMultiply {
 
 				Matrix a = new Matrix(aValues, nbRows, nbCols);
 				Matrix b = new Matrix(bValues, nbRows, nbCols);
-				beginJob(a,b,"1",peer,jobMasters);
+				beginJob(a,b,"1",peer);
 			}
 			boolean finished = false;
 			while(!finished){
@@ -54,7 +55,7 @@ public class StrassenMultiply {
 					jobId = mes.getJobId();
 					int sender = mes.getSender();
 					jobMasters.put(jobId,sender);
-					beginJob(m1,m2,jobId,peer,jobMasters);
+					beginJob(m1,m2,jobId,peer);
 					break;
 				case DONE_JOB:
 					Matrix m = mes.getResult();
@@ -65,7 +66,7 @@ public class StrassenMultiply {
 					}
 					doneJobs.get(parentJob).put(jobId,m);
 					if (doneJobs.get(parentJob).size()==7){
-						finishJob(parentJob,doneJobs,peer,jobMasters);
+						finishJob(parentJob,doneJobs,peer);
 					}
 					break;
 				case END:
@@ -78,7 +79,7 @@ public class StrassenMultiply {
 			peer.sync();
 		}
 
-		private void finishJob(String jobId, Map<String,Map<String,Matrix>> doneJobs, BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer, Map<String,Integer> jobMasters) {
+		private void finishJob(String jobId, Map<String,Map<String,Matrix>> doneJobs, BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer) {
 			try {
 				Map<String,Matrix> jobs = doneJobs.get(jobId);
 				Matrix[] m = new Matrix[7];
@@ -91,15 +92,19 @@ public class StrassenMultiply {
 				Matrix c22 = m[1].sum(m[2]).sum(m[3]).sum(m[6]);
 				Matrix c = new Matrix(c11,c12,c21,c22);
 				doneJobs.remove(jobId);
-				JobMessage doneJob = new JobMessage(c, jobId, MessageType.DONE_JOB);
-				String peerName = peer.getPeerName(jobMasters.get(jobId));
-				peer.send(peerName,doneJob);
+				if (jobId.equals("")){
+					sendFinish(peer);
+				} else {
+					JobMessage doneJob = new JobMessage(c, jobId, MessageType.DONE_JOB);
+					String peerName = peer.getPeerName(jobMasters.get(jobId));
+					peer.send(peerName,doneJob);
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}	
 		}
 
-		private void beginJob(Matrix a, Matrix b, String jobId, BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer, Map<String,Integer> jobMasters) {
+		private void beginJob(Matrix a, Matrix b, String jobId, BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer) {
 			try {
 				Integer slaveCounter = peer.getPeerIndex();
 				if (a.size()==1){
@@ -122,7 +127,7 @@ public class StrassenMultiply {
 					peer.send(getNextPeer(slaveCounter,peer), doJob5);
 					peer.send(getNextPeer(slaveCounter,peer), doJob6);
 					jobMasters.put(jobId+"7", peer.getPeerIndex());
-					beginJob(a12.diff(a22), b21.sum(b22), jobId+"7", peer, jobMasters);
+					beginJob(a12.diff(a22), b21.sum(b22), jobId+"7", peer);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -136,6 +141,17 @@ public class StrassenMultiply {
 				return getNextPeer(slaveCounter, peer);
 			} else {
 				return peer.getPeerName(slaveCounter);
+			}
+		}
+		
+		private void sendFinish(BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, JobMessage> peer){
+			try {
+				for (String peerName : peer.getAllPeerNames()){
+					JobMessage end = new JobMessage(MessageType.END);
+					peer.send(peerName,end);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
