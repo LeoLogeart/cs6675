@@ -24,19 +24,19 @@ public class Matrix{
 				values[i][j] = c11.get(i, j);
 			}
 		}
-		for (int i = c11.getNbRows(); i < nbRows; i++) {
+		for (int i = c21.getNbRows(); i < nbRows; i++) {
 			for (int j = 0; j < c21.getNbCols(); j++) {
-				values[i][j] = c21.get(i-c11.getNbRows(), j); //TODO
+				values[i][j] = c21.get(i-c21.getNbRows(), j);
 			}
 		}
 		for (int i = 0; i < c12.getNbRows(); i++) {
-			for (int j = c11.getNbCols(); j < nbCols; j++) {
-				values[i][j] = c11.get(i, j-c11.getNbCols());
+			for (int j = c12.getNbCols(); j < nbCols; j++) {
+				values[i][j] = c12.get(i, j-c12.getNbCols());
 			}
 		}
-		for (int i = c12.getNbRows(); i < nbRows; i++) {
-			for (int j = c21.getNbCols(); j < nbCols; j++) {
-				values[i][j] = c11.get(i-c12.getNbRows(), j-c21.getNbCols());
+		for (int i = c22.getNbRows(); i < nbRows; i++) {
+			for (int j = c22.getNbCols(); j < nbCols; j++) {
+				values[i][j] = c22.get(i-c22.getNbRows(), j-c22.getNbCols());
 			}
 		}
 	}
@@ -69,7 +69,7 @@ public class Matrix{
 		for (int i = 0 ; i < nbRows ; i++) {
 			m[i] = Arrays.copyOfRange(a.getValues()[i], 0, nbCols);
 		}
-		this.values=a.getValues();
+		this.values=m;
 	}
 
 	public double get(int i, int j) {
