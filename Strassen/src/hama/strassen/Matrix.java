@@ -153,11 +153,21 @@ public class Matrix{
 		System.out.println(toString());
 	}
 
-	public Matrix getBlock(int begI, int begJ, int blockSize) {
+	public Matrix getBlock2(int begI, int begJ, int blockSize) {
 		Matrix block = new Matrix(blockSize,blockSize);
 		for (int i=begI;i<begI+blockSize;i++){
 			for (int j=begJ;j<begJ+blockSize;j++){
 				block.setValue(i-begI,j-begJ,values[i][j]);
+			}
+		}
+		return block;
+	}
+	
+	public Matrix getBlock(int iInd, int jInd, int blockSize){
+		Matrix block = new Matrix(blockSize,blockSize);
+		for (int i=iInd*blockSize;i<iInd*blockSize+blockSize;i++){
+			for (int j=jInd*blockSize;j<jInd*blockSize+blockSize;j++){
+				block.setValue(i%blockSize, j%blockSize, values[i][j]);
 			}
 		}
 		return block;
@@ -210,5 +220,14 @@ public class Matrix{
 			sb.append("\n");
 		}
 		return sb.toString();
+	}
+
+	public void zeroes() {
+		for (int i=0;i<nbRows;i++){
+			for (int j=0;j<nbCols;j++){
+				values[i][j]=0;
+			}
+		}
+		
 	}
 }

@@ -22,12 +22,13 @@ public class StrassenMultiply {
 		private String path_a = "src/a";
 		private String path_b = "src/b";
 		private String path_c = "src/c";
-		private int nbRows = 4;
-		private int nbCols = 4;
-		private int blockSize = 2;
+		private static int nbRows = 4;
+		private static int nbCols = 4;
+		private static int blockSize = 2;
 		private static HashMap<Integer, Matrix> aBlocks;
 		private static HashMap<Integer, Matrix> bBlocks;
-		private HashMap<Integer, Matrix> resBlocks;
+		private static HashMap<Integer, Matrix> resBlocks;
+		private static HashMap<Integer,Integer[]> indices;
 		
 		@Override
 		public void setup(BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, ResultMessage> peer)
@@ -37,17 +38,21 @@ public class StrassenMultiply {
 				bBlocks = new HashMap<Integer, Matrix>();
 				Matrix a = new Matrix(Utils.readMatrix(new Path(path_a), peer.getConfiguration(), nbRows, nbCols),nbRows,nbCols);
 				Matrix b = new Matrix(Utils.readMatrix(new Path(path_b), peer.getConfiguration(), nbRows, nbCols),nbRows,nbCols);
+				System.out.println("A*B");
 				System.out.println(a.mult(b).toString());
-				int nbBlocks = (nbRows/blockSize)*(nbCols/blockSize);
+				//int nbBlocks = (nbRows/blockSize)*(nbCols/blockSize);
 				int peerInd = 0;
-				for (int i=0;i<peer.getNumPeers()/nbBlocks;i++){
-					Matrix aBlock = a.getBlock((int)Math.floor(i/2)*blockSize,(i%2)*blockSize,blockSize);
-					Matrix bBlock= null;
-					for (int j=0;j<peer.getNumPeers()/nbBlocks;j++){
-						bBlock = b.getBlock((int)Math.floor(j/2)*blockSize,(j%2)*blockSize,blockSize);
-						aBlocks.put(peerInd,aBlock);
-						bBlocks.put(peerInd, bBlock);
-						peerInd++;
+				indices = new HashMap<Integer, Integer[]>();
+				for (int i=0;i<nbRows/blockSize;i++){
+					for (int j=0;j<nbCols/blockSize;j++){
+						for (int k=0;k<blockSize;k++){
+							Matrix aBlock = a.getBlock(i,k,blockSize);
+							Matrix bBlock = b.getBlock(k, j, blockSize);	
+							aBlocks.put(peerInd,aBlock);
+							bBlocks.put(peerInd, bBlock);
+							indices.put(peerInd, new Integer[]{i,j});
+							peerInd++;
+						}
 					}
 				}
 			}
@@ -78,19 +83,25 @@ public class StrassenMultiply {
 					resBlocks.put(peerInd, block);
 					result = peer.getCurrentMessage();
 				}
-				Matrix c11 = resBlocks.get(0).sum(resBlocks.get(6));
-				Matrix c12 = resBlocks.get(1).sum(resBlocks.get(7));
-				Matrix c21 = resBlocks.get(8).sum(resBlocks.get(14));
-				Matrix c22 = resBlocks.get(9).sum(resBlocks.get(15));
-				System.out.println(c11.toString());
-				System.out.println(c12.toString());
-				System.out.println(c21.toString());
-				System.out.println(c22.toString());
-				/*for (Map.Entry entry : resBlocks.entrySet()) {
-				    System.out.print("key,val: ");
-				    System.out.println(entry.getKey() + "," + ((Matrix)entry.getValue()).toString());
-				}*/
 				
+				Matrix[][] cBlocks = new Matrix[nbRows/blockSize][nbCols/blockSize];
+				for (int i=0;i<nbRows/blockSize;i++){
+					for (int j=0;j<nbCols/blockSize;j++){
+						cBlocks[i][j] = new Matrix(blockSize,blockSize);
+						cBlocks[i][j].zeroes();
+					}
+				}
+				for (Integer peerInd : indices.keySet()){
+					Integer[] inds = indices.get(peerInd);
+					cBlocks[inds[0]][inds[1]] = cBlocks[inds[0]][inds[1]].sum(resBlocks.get(peerInd));
+				}
+				
+				System.out.println("C Blocks");
+				for (int i=0;i<nbRows/blockSize;i++){
+					for (int j=0;j<nbCols/blockSize;j++){
+						cBlocks[i][j].print();
+					}
+				}
 			}
 		}
 		
@@ -104,7 +115,7 @@ public class StrassenMultiply {
 		bsp.setBspClass(StrassenBSP.class);
 		bsp.setOutputPath(new Path("src/out"));
 
-		bsp.setNumBspTask(16);
+		bsp.setNumBspTask(8);
 		if (bsp.waitForCompletion(true)) {
 			System.out.println("Job Finished");
 		}
