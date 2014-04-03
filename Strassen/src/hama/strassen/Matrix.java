@@ -40,6 +40,21 @@ public class Matrix{
 			}
 		}
 	}
+	
+	public Matrix(Matrix[][] blocks,int nbRows, int nbCols, int blockSize){
+		this.nbRows = nbRows;
+		this.nbCols = nbCols;
+		values = new double[nbRows][nbCols];
+		for (int i=0;i<blocks.length;i++){
+			for (int j=0;j<blocks[i].length;j++){
+				for (int k=i*blockSize;k<(i+1)*blockSize;k++){
+					for (int m=j*blockSize;m<(j+1)*blockSize;m++){
+						values[k][m]=blocks[i][j].get(k%blockSize,m%blockSize);
+					}
+				}
+			}
+		}
+	}
 
 	public Matrix(int nbRows, int nbCols) {
 		values = new double[nbRows][nbCols];
@@ -151,16 +166,6 @@ public class Matrix{
 	
 	public void print(){
 		System.out.println(toString());
-	}
-
-	public Matrix getBlock2(int begI, int begJ, int blockSize) {
-		Matrix block = new Matrix(blockSize,blockSize);
-		for (int i=begI;i<begI+blockSize;i++){
-			for (int j=begJ;j<begJ+blockSize;j++){
-				block.setValue(i-begI,j-begJ,values[i][j]);
-			}
-		}
-		return block;
 	}
 	
 	public Matrix getBlock(int iInd, int jInd, int blockSize){

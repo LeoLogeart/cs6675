@@ -2,8 +2,6 @@ package hama.strassen;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -21,7 +19,6 @@ public class StrassenMultiply {
 		
 		private String path_a = "src/a";
 		private String path_b = "src/b";
-		private String path_c = "src/c";
 		private static int nbRows = 4;
 		private static int nbCols = 4;
 		private static int blockSize = 2;
@@ -40,7 +37,6 @@ public class StrassenMultiply {
 				Matrix b = new Matrix(Utils.readMatrix(new Path(path_b), peer.getConfiguration(), nbRows, nbCols),nbRows,nbCols);
 				System.out.println("A*B");
 				System.out.println(a.mult(b).toString());
-				//int nbBlocks = (nbRows/blockSize)*(nbCols/blockSize);
 				int peerInd = 0;
 				indices = new HashMap<Integer, Integer[]>();
 				for (int i=0;i<nbRows/blockSize;i++){
@@ -96,12 +92,9 @@ public class StrassenMultiply {
 					cBlocks[inds[0]][inds[1]] = cBlocks[inds[0]][inds[1]].sum(resBlocks.get(peerInd));
 				}
 				
-				System.out.println("C Blocks");
-				for (int i=0;i<nbRows/blockSize;i++){
-					for (int j=0;j<nbCols/blockSize;j++){
-						cBlocks[i][j].print();
-					}
-				}
+				System.out.println("C");
+				Matrix c = new Matrix(cBlocks,nbRows,nbCols,blockSize);
+				c.print();
 			}
 		}
 		
