@@ -2,6 +2,8 @@ package hama.strassen;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -35,6 +37,7 @@ public class StrassenMultiply {
 				bBlocks = new HashMap<Integer, Matrix>();
 				Matrix a = new Matrix(Utils.readMatrix(new Path(path_a), peer.getConfiguration(), nbRows, nbCols),nbRows,nbCols);
 				Matrix b = new Matrix(Utils.readMatrix(new Path(path_b), peer.getConfiguration(), nbRows, nbCols),nbRows,nbCols);
+				System.out.println(a.mult(b).toString());
 				int nbBlocks = (nbRows/blockSize)*(nbCols/blockSize);
 				int peerInd = 0;
 				for (int i=0;i<peer.getNumPeers()/nbBlocks;i++){
@@ -67,6 +70,7 @@ public class StrassenMultiply {
 		public void cleanup(BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, ResultMessage> peer)
 				throws IOException {
 			if (peer.getPeerIndex()==0){
+				resBlocks= new HashMap<Integer, Matrix>();
 				ResultMessage result = peer.getCurrentMessage();
 				while (result!=null){
 					int peerInd = result.getSender();
@@ -74,6 +78,19 @@ public class StrassenMultiply {
 					resBlocks.put(peerInd, block);
 					result = peer.getCurrentMessage();
 				}
+				Matrix c11 = resBlocks.get(0).sum(resBlocks.get(6));
+				Matrix c12 = resBlocks.get(1).sum(resBlocks.get(7));
+				Matrix c21 = resBlocks.get(8).sum(resBlocks.get(14));
+				Matrix c22 = resBlocks.get(9).sum(resBlocks.get(15));
+				System.out.println(c11.toString());
+				System.out.println(c12.toString());
+				System.out.println(c21.toString());
+				System.out.println(c22.toString());
+				/*for (Map.Entry entry : resBlocks.entrySet()) {
+				    System.out.print("key,val: ");
+				    System.out.println(entry.getKey() + "," + ((Matrix)entry.getValue()).toString());
+				}*/
+				
 			}
 		}
 		

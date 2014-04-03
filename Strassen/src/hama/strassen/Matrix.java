@@ -26,17 +26,17 @@ public class Matrix{
 		}
 		for (int i = c11.getNbRows(); i < nbRows; i++) {
 			for (int j = 0; j < c21.getNbCols(); j++) {
-				values[i][j] = c21.get(i, j); //TODO
+				values[i][j] = c21.get(i-c11.getNbRows(), j); //TODO
 			}
 		}
 		for (int i = 0; i < c12.getNbRows(); i++) {
 			for (int j = c11.getNbCols(); j < nbCols; j++) {
-				values[i][j] = c11.get(i, j);
+				values[i][j] = c11.get(i, j-c11.getNbCols());
 			}
 		}
 		for (int i = c12.getNbRows(); i < nbRows; i++) {
 			for (int j = c21.getNbCols(); j < nbCols; j++) {
-				values[i][j] = c11.get(i, j);
+				values[i][j] = c11.get(i-c12.getNbRows(), j-c21.getNbCols());
 			}
 		}
 	}
@@ -150,12 +150,7 @@ public class Matrix{
 	}
 	
 	public void print(){
-		for (int i=0;i<nbRows;i++){
-			for (int j=0;j<nbCols;j++){
-				System.out.print(values[i][j]+",");
-			}
-			System.out.println();
-		}
+		System.out.println(toString());
 	}
 
 	public Matrix getBlock(int begI, int begJ, int blockSize) {
@@ -204,5 +199,16 @@ public class Matrix{
 		}
 
 		return new Matrix(C, getNbRows(), b.getNbCols());
+	}
+	
+	public String toString(){
+		StringBuilder sb= new StringBuilder();
+		for (int i=0;i<nbRows;i++){
+			for (int j=0;j<nbCols;j++){
+				sb.append(values[i][j]+",");
+			}
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 }

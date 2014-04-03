@@ -11,6 +11,10 @@ public class ResultMessage implements Writable{
 	private int sender;
 	private Matrix result;
 
+	public ResultMessage() {
+		super();
+	}
+	
 	public ResultMessage(int sender, Matrix result) {
 		this.sender = sender;
 		this.result = result;
