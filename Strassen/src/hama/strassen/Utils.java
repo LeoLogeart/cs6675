@@ -42,14 +42,8 @@ public class Utils {
 	// Reads matrix from dfs and pads it to have rows and columns dividable by blocksize
 	public static double[][] readMatrix(Path path, HamaConfiguration conf, int rows, int columns, int blockSize){
 
-		int finalRows=rows;
-		int finalCols=columns;
-		if(rows%blockSize!=0){
-			finalRows=rows+blockSize-(rows%blockSize);
-		}
-		if(columns%blockSize!=0){
-			finalRows=rows+blockSize-(rows%blockSize);
-		}
+		int finalRows=getBlockMultiple(rows, blockSize);
+		int finalCols=getBlockMultiple(columns,blockSize);
 
 		double[][] matrix = new double[finalRows][finalCols];
 		SequenceFile.Reader reader = null;
@@ -82,6 +76,14 @@ public class Utils {
 			}
 		}
 		return matrix;
+	}
+
+	public static int getBlockMultiple(int size, int blockSize) {
+		int res = size;
+			if(res%blockSize!=0){
+				res=res+blockSize-(res%blockSize);
+			}
+		return res;
 	}
 
 }

@@ -17,9 +17,10 @@ public class MatrixGenerator {
 		int colSize = Integer.parseInt(args[1]);
 		Path outputPath = new Path(args[2]);
 
-		double[][] matrix = createRandomMatrix(rowSize, colSize, new Random(),
-				0, 100);
-
+		double[][] matrix = createRandomMatrix(rowSize, colSize, new Random(),0, 100);
+		
+		//double[][] a={{1,2,3},{2,0,1},{1,1,1},{2,2,0}};
+		//double[][] b={{1,2},{0,1},{1,1}};
 		Utils.writeMatrix(matrix, outputPath, new HamaConfiguration());
 	}
 
