@@ -39,9 +39,19 @@ public class Utils {
 		return path;
 	}
 	
-	// Reads matrix from dfs
-	public static double[][] readMatrix(Path path, HamaConfiguration conf, int rows, int columns){
-		double[][] matrix = new double[rows][columns];
+	// Reads matrix from dfs and pads it to have rows and columns dividable by blocksize
+	public static double[][] readMatrix(Path path, HamaConfiguration conf, int rows, int columns, int blockSize){
+
+		int finalRows=rows;
+		int finalCols=columns;
+		if(rows%blockSize!=0){
+			finalRows=rows+blockSize-(rows%blockSize);
+		}
+		if(columns%blockSize!=0){
+			finalRows=rows+blockSize-(rows%blockSize);
+		}
+
+		double[][] matrix = new double[finalRows][finalCols];
 		SequenceFile.Reader reader = null;
 		try {
 			FileSystem fs = FileSystem.get(conf);
@@ -63,6 +73,12 @@ public class Utils {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			}
+		}
+
+		for (int k = rows; k < finalRows; k++) {
+			for (int p = columns; p < finalCols; p++) {
+				matrix[k][p] = 0;
 			}
 		}
 		return matrix;

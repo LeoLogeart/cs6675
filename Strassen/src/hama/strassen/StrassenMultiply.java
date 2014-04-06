@@ -12,13 +12,15 @@ import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
 
 public class StrassenMultiply {
+		private static final String inputMatrixAPathString = "strassen.patha";
+		private static final String inputMatrixBPathString = "strassen.pathb";
+		private static final String blockSizeString = "strassen.blocksize";
+		
 	
 	public static class StrassenBSP
 	extends
 	BSP<NullWritable, NullWritable, NullWritable, NullWritable, ResultMessage> {
 		
-		private String path_a = "src/a";
-		private String path_b = "src/b";
 		private static int nbRows = 4;
 		private static int nbCols = 4;
 		private static int blockSize = 2;
@@ -30,11 +32,13 @@ public class StrassenMultiply {
 		@Override
 		public void setup(BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, ResultMessage> peer)
 				throws IOException, SyncException, InterruptedException {
+			HamaConfiguration conf =peer.getConfiguration();
+			blockSize=conf.getInt(blockSizeString, 2);
 			if (peer.getPeerIndex()==0){
 				aBlocks = new HashMap<Integer, Matrix>();
 				bBlocks = new HashMap<Integer, Matrix>();
-				Matrix a = new Matrix(Utils.readMatrix(new Path(path_a), peer.getConfiguration(), nbRows, nbCols),nbRows,nbCols);
-				Matrix b = new Matrix(Utils.readMatrix(new Path(path_b), peer.getConfiguration(), nbRows, nbCols),nbRows,nbCols);
+				Matrix a = new Matrix(Utils.readMatrix(new Path(conf.get(inputMatrixAPathString)), peer.getConfiguration(), nbRows, nbCols,blockSize),nbRows,nbCols);
+				Matrix b = new Matrix(Utils.readMatrix(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), nbRows, nbCols,blockSize),nbRows,nbCols);
 				System.out.println("A*B");
 				System.out.println(a.mult(b).toString());
 				int peerInd = 0;
@@ -106,13 +110,41 @@ public class StrassenMultiply {
 		// Set the job name
 		bsp.setJobName("Strassen Multiply");
 		bsp.setBspClass(StrassenBSP.class);
+		
+		//DELETE////
 		bsp.setOutputPath(new Path("src/out"));
-
 		bsp.setNumBspTask(8);
+		conf.set(inputMatrixAPathString, "src/a");
+		conf.set(inputMatrixBPathString, "src/b");
+		///////////
+		
+		if(args.length < 3 || args.length >5){
+			printUsage();
+			//TODO return;
+		} else {
+			parseArgs(args,conf,bsp);
+		}
+		
 		if (bsp.waitForCompletion(true)) {
 			System.out.println("Job Finished");
 		}
 
 	}
+	
+	private static void parseArgs(String[] args, HamaConfiguration conf, BSPJob bsp) {
+		conf.set(inputMatrixAPathString, args[0]);
+		conf.set(inputMatrixBPathString, args[1]);
+		bsp.setOutputPath(new Path(args[2]));
+		if(args.length>3){
+			bsp.setNumBspTask(Integer.parseInt(args[2]));
+			if(args.length>4){
+				conf.setInt(blockSizeString, Integer.parseInt(args[4]));
+			}
+		}
+		
+	}
 
+	private static void printUsage() {
+	    System.out.println("Usage: StrassenMultiply <path A> <path B> <path output> [block size] [number of tasks]");
+	  }
 }
