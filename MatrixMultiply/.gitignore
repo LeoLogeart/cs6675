@@ -1,2 +1,6 @@
 /bin
 /src/out
+/src/a*
+/src/b*
+.classpath
+.settings
