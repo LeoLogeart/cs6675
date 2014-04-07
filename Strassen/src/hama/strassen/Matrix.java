@@ -97,11 +97,6 @@ public class Matrix{
 		return nbCols;
 	}
 
-	public Matrix multiply(Matrix b) {
-		double m[][] = { { this.get(0, 0) * b.get(0, 0) } };
-		return new Matrix(m, 1, 1);
-	}
-
 	public Matrix sum(Matrix a) {
 		Matrix c = new Matrix(a);
 		
