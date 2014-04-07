@@ -16,6 +16,7 @@ import org.apache.hama.bsp.sync.SyncException;
 public class StrassenMultiply {
 	private static final String inputMatrixAPathString = "strassen.patha";
 	private static final String inputMatrixBPathString = "strassen.pathb";
+	private static final String inputMatrixCPathString = "strassen.pathc";
 	private static final String blockSizeString = "strassen.blocksize";
 	private static final String inputMatrixARows = "strassen.nbRowA";
 	private static final String inputMatrixACols = "strassen.nbColA";
@@ -76,16 +77,16 @@ public class StrassenMultiply {
 				for (int i = 0; i < nbRowsA / blockSize; i++) {
 					for (int j = 0; j < nbColsB / blockSize; j++) {
 						for (int k = 0; k < nbColsA / blockSize; k++) {
-							if (peerInd==0){
-								if (masterIndices==null){
+							if (peerInd == 0) {
+								if (masterIndices == null) {
 									masterIndices = new ArrayList<Integer[]>();
 								}
-								masterIndices.add(new Integer[]{i,j,k});
+								masterIndices.add(new Integer[] { i, j, k });
 							} else {
 								JobMessage job = new JobMessage(0, i, j, k);
 								peer.send(peer.getPeerName(peerInd), job);
 							}
-			
+
 							List<Integer[]> peerIndices = indices.get(peerInd);
 							if (peerIndices == null) {
 								peerIndices = new ArrayList<Integer[]>();
@@ -104,10 +105,10 @@ public class StrassenMultiply {
 		public void bsp(
 				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> peer)
 				throws IOException, SyncException, InterruptedException {
-			if (peer.getPeerIndex()==0){
+			if (peer.getPeerIndex() == 0) {
 				resBlocks = new HashMap<Integer, List<Matrix>>();
 				resBlocks.put(0, new ArrayList<Matrix>());
-				for (Integer[] inds : masterIndices){
+				for (Integer[] inds : masterIndices) {
 					Matrix aBlock = a.getBlock(inds[0], inds[2], blockSize);
 					Matrix bBlock = b.getBlock(inds[2], inds[1], blockSize);
 					Matrix resBlock = aBlock.strassen(bBlock);
@@ -171,7 +172,9 @@ public class StrassenMultiply {
 
 				System.out.println("C");
 				Matrix c = new Matrix(cBlocks, nbRowsA, nbColsB, blockSize);
-				c.print();
+				Utils.writeMatrix(c.getValues(), new Path(peer
+						.getConfiguration().get(inputMatrixCPathString)), peer
+						.getConfiguration());
 			}
 		}
 	}
@@ -182,7 +185,7 @@ public class StrassenMultiply {
 		// Set the job name
 		bsp.setJobName("Strassen Multiply");
 		bsp.setBspClass(StrassenBSP.class);
-		// bsp.setJar("strassen.jar");
+		bsp.setJar("strassen.jar");
 
 		// DELETE ////
 		bsp.setOutputPath(new Path("src/out"));
@@ -222,6 +225,7 @@ public class StrassenMultiply {
 		}
 		conf.setInt(inputMatrixBCols, Integer.parseInt(args[5]));
 		bsp.setOutputPath(new Path(args[6]));
+		conf.set(inputMatrixCPathString, args[6]);
 		if (args.length > 7) {
 			bsp.setNumBspTask(Integer.parseInt(args[7]));
 			if (args.length > 8) {
@@ -282,6 +286,12 @@ public class StrassenMultiply {
 			System.out.println("peers :" + tasks);
 			bsp.setNumBspTask(tasks);
 		}
+		double[][] cValues = Utils.readMatrix(new Path(args[6]), conf,
+				Integer.parseInt(args[1]), Integer.parseInt(args[5]),
+				Integer.parseInt(args[8]));
+		Matrix c = new Matrix(cValues, Integer.parseInt(args[1]),
+				Integer.parseInt(args[5]));
+		c.print();
 		return 0;
 	}
 
