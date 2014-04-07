@@ -26,11 +26,13 @@ public class StrassenMultiply {
 			extends
 			BSP<NullWritable, NullWritable, NullWritable, NullWritable, ResultMessage> {
 
-		private static int nbRowsA;
-		private static int nbColsA;
-		private static int nbRowsB;
-		private static int nbColsB;
-		private static int blockSize = 2;
+		private int nbRowsA;
+		private int nbColsA;
+		private int nbRowsB;
+		private int nbColsB;
+		private int blockSize = 2;
+		private Matrix a;
+		private Matrix b;
 		private static HashMap<Integer, List<Matrix>> aBlocks;
 		private static HashMap<Integer, List<Matrix>> bBlocks;
 		private static HashMap<Integer, List<Matrix>> resBlocks;
