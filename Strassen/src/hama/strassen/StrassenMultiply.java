@@ -170,10 +170,9 @@ public class StrassenMultiply {
 					}
 				}
 
-				System.out.println("C");
 				Matrix c = new Matrix(cBlocks, nbRowsA, nbColsB, blockSize);
-				Utils.writeMatrix(c.getValues(), new Path(peer
-						.getConfiguration().get(inputMatrixCPathString)), peer
+				HamaConfiguration conf = peer.getConfiguration();
+				Utils.writeMatrix(c.getValues(), new Path(conf.get(inputMatrixCPathString)), peer
 						.getConfiguration());
 			}
 		}
@@ -187,14 +186,7 @@ public class StrassenMultiply {
 		bsp.setBspClass(StrassenBSP.class);
 		bsp.setJar("strassen.jar");
 
-		// DELETE ////
-		bsp.setOutputPath(new Path("src/out"));
-		bsp.setNumBspTask(8);
-		conf.set(inputMatrixAPathString, "src/a");
-		conf.set(inputMatrixBPathString, "src/b");
-		// /////////
-
-		if (args.length < 6 || args.length > 9) {
+		if (args.length < 6 || args.length > 10) {
 			printUsage();
 			// TODO return;
 		} else {
@@ -210,9 +202,9 @@ public class StrassenMultiply {
 					+ " seconds.");
 		}
 		
-		double[][] cValues = Utils.readMatrix(new Path(args[6]), conf,
+		double[][] cValues = Utils.readMatrix(new Path(args[7]), conf,
 				Integer.parseInt(args[1]), Integer.parseInt(args[5]),
-				Integer.parseInt(args[8]));
+				Integer.parseInt(args[9]));
 		Matrix c = new Matrix(cValues, Integer.parseInt(args[1]),
 				Integer.parseInt(args[5]));
 		c.print();
@@ -232,11 +224,11 @@ public class StrassenMultiply {
 		}
 		conf.setInt(inputMatrixBCols, Integer.parseInt(args[5]));
 		bsp.setOutputPath(new Path(args[6]));
-		conf.set(inputMatrixCPathString, args[6]);
-		if (args.length > 7) {
-			bsp.setNumBspTask(Integer.parseInt(args[7]));
-			if (args.length > 8) {
-				int n = Integer.parseInt(args[8]);
+		conf.set(inputMatrixCPathString, args[7]);
+		if (args.length > 8) {
+			bsp.setNumBspTask(Integer.parseInt(args[8]));
+			if (args.length > 9) {
+				int n = Integer.parseInt(args[9]);
 				if ((n & (n - 1)) != 0) {
 					System.out.println("The block size must be a power of two");
 					return 1;
@@ -259,7 +251,7 @@ public class StrassenMultiply {
 				}
 				n /= 2;
 
-				int nbPeers = Integer.parseInt(args[7]);
+				int nbPeers = Integer.parseInt(args[8]);
 				/*
 				 * lower the block size to make sure every peer has at least a
 				 * task
@@ -299,6 +291,6 @@ public class StrassenMultiply {
 	private static void printUsage() {
 		System.out
 				.println("Usage: StrassenMultiply <path A> <number rows A> <number columns A>"
-						+ "<path B> <number rows B> <number columns B> <path output> [number of tasks] [block size]");
+						+ "<path B> <number rows B> <number columns B> <path output> <path C> [number of tasks] [block size]");
 	}
 }
