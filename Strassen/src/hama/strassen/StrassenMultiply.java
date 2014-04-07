@@ -209,6 +209,13 @@ public class StrassenMultiply {
 					+ (System.currentTimeMillis() - startTime) / 1000.0
 					+ " seconds.");
 		}
+		
+		double[][] cValues = Utils.readMatrix(new Path(args[6]), conf,
+				Integer.parseInt(args[1]), Integer.parseInt(args[5]),
+				Integer.parseInt(args[8]));
+		Matrix c = new Matrix(cValues, Integer.parseInt(args[1]),
+				Integer.parseInt(args[5]));
+		c.print();
 
 	}
 
@@ -286,12 +293,6 @@ public class StrassenMultiply {
 			System.out.println("peers :" + tasks);
 			bsp.setNumBspTask(tasks);
 		}
-		double[][] cValues = Utils.readMatrix(new Path(args[6]), conf,
-				Integer.parseInt(args[1]), Integer.parseInt(args[5]),
-				Integer.parseInt(args[8]));
-		Matrix c = new Matrix(cValues, Integer.parseInt(args[1]),
-				Integer.parseInt(args[5]));
-		c.print();
 		return 0;
 	}
 
