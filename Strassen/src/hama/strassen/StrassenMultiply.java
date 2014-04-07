@@ -1,7 +1,9 @@
 package hama.strassen;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -29,10 +31,10 @@ public class StrassenMultiply {
 		private static int nbRowsB;
 		private static int nbColsB;
 		private static int blockSize = 2;
-		private static HashMap<Integer, Matrix> aBlocks;
-		private static HashMap<Integer, Matrix> bBlocks;
-		private static HashMap<Integer, Matrix> resBlocks;
-		private static HashMap<Integer, Integer[]> indices;
+		private static HashMap<Integer, List<Matrix>> aBlocks;
+		private static HashMap<Integer, List<Matrix>> bBlocks;
+		private static HashMap<Integer, List<Matrix>> resBlocks;
+		private static HashMap<Integer, List<Integer[]>> indices;
 
 		@Override
 		public void setup(
@@ -41,8 +43,8 @@ public class StrassenMultiply {
 			HamaConfiguration conf = peer.getConfiguration();
 			blockSize = conf.getInt(blockSizeString, 2);
 			if (peer.getPeerIndex() == 0) {
-				aBlocks = new HashMap<Integer, Matrix>();
-				bBlocks = new HashMap<Integer, Matrix>();
+				aBlocks = new HashMap<Integer, List<Matrix>>();
+				bBlocks = new HashMap<Integer, List<Matrix>>();
 
 				/* Values for rows and columns padded */
 				nbRowsA = Utils.getBlockMultiple(
@@ -70,16 +72,33 @@ public class StrassenMultiply {
 				System.out.println("A*B");
 				System.out.println(a.mult(b).toString());
 				int peerInd = 0;
-				indices = new HashMap<Integer, Integer[]>();
+				indices = new HashMap<Integer, List<Integer[]>>();
 				for (int i = 0; i < nbRowsA / blockSize; i++) {
 					for (int j = 0; j < nbColsB / blockSize; j++) {
 						for (int k = 0; k < nbColsA / blockSize; k++) {
 							Matrix aBlock = a.getBlock(i, k, blockSize);
 							Matrix bBlock = b.getBlock(k, j, blockSize);
-							aBlocks.put(peerInd, aBlock);
-							bBlocks.put(peerInd, bBlock);
-							indices.put(peerInd, new Integer[] { i, j });
-							peerInd++;
+							List<Matrix> peerABlocks = aBlocks.get(peerInd);
+							if (peerABlocks==null) {
+								peerABlocks = new ArrayList<Matrix>();
+							}
+							peerABlocks.add(aBlock);
+							aBlocks.put(peerInd, peerABlocks);
+							
+							List<Matrix> peerBBlocks = bBlocks.get(peerInd);
+							if (peerBBlocks==null) {
+								peerBBlocks = new ArrayList<Matrix>();
+							}
+							peerBBlocks.add(bBlock);
+							bBlocks.put(peerInd, peerBBlocks);
+
+							List<Integer[]> peerIndices = indices.get(peerInd);
+							if (peerIndices==null) {
+								peerIndices = new ArrayList<Integer[]>();
+							}
+							peerIndices.add(new Integer[]{ i, j});
+							indices.put(peerInd, peerIndices);
+							peerInd = (peerInd+1)%peer.getNumPeers();
 						}
 					}
 				}
@@ -91,9 +110,11 @@ public class StrassenMultiply {
 		public void bsp(
 				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, ResultMessage> peer)
 				throws IOException, SyncException, InterruptedException {
-			Matrix aBlock = aBlocks.get(peer.getPeerIndex());
-			Matrix bBlock = bBlocks.get(peer.getPeerIndex());
-			if (bBlock != null) {// TODO del if => manage peers
+			List<Matrix> peerABlocks = aBlocks.get(peer.getPeerIndex());
+			List<Matrix> peerBBlocks = bBlocks.get(peer.getPeerIndex());
+			for (int i=0; i<peerABlocks.size();i++){
+				Matrix aBlock = peerABlocks.get(i);
+				Matrix bBlock = peerBBlocks.get(i);
 				Matrix resBlock = aBlock.strassen(bBlock);
 				ResultMessage mes = new ResultMessage(peer.getPeerIndex(),
 						resBlock);
@@ -107,12 +128,17 @@ public class StrassenMultiply {
 				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, ResultMessage> peer)
 				throws IOException {
 			if (peer.getPeerIndex() == 0) {
-				resBlocks = new HashMap<Integer, Matrix>();
+				resBlocks = new HashMap<Integer, List<Matrix>>();
 				ResultMessage result = peer.getCurrentMessage();
 				while (result != null) {
 					int peerInd = result.getSender();
 					Matrix block = result.getResult();
-					resBlocks.put(peerInd, block);
+					List<Matrix> peerResBlocks = resBlocks.get(peerInd);
+					if (peerResBlocks==null){
+						peerResBlocks = new ArrayList<Matrix>();
+					}
+					peerResBlocks.add(block);
+					resBlocks.put(peerInd, peerResBlocks);
 					result = peer.getCurrentMessage();
 				}
 
@@ -125,11 +151,13 @@ public class StrassenMultiply {
 					}
 				}
 				for (Integer peerInd : indices.keySet()) {
-					Integer[] inds = indices.get(peerInd);
-					if (resBlocks.get(peerInd) != null) {// TODO del if =>
-															// manage peers
+					List<Matrix> peerResBlocks = resBlocks.get(peerInd);
+					List<Integer[]> peerIndices = indices.get(peerInd);
+					for (int i=0; i<peerResBlocks.size(); i++){
+						Matrix resBlock = peerResBlocks.get(i);
+						Integer[] inds = peerIndices.get(i);
 						cBlocks[inds[0]][inds[1]] = cBlocks[inds[0]][inds[1]]
-								.sum(resBlocks.get(peerInd));
+								.sum(resBlock);
 					}
 				}
 
