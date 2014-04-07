@@ -43,7 +43,7 @@ public class StrassenMultiply {
 			if (peer.getPeerIndex() == 0) {
 				aBlocks = new HashMap<Integer, Matrix>();
 				bBlocks = new HashMap<Integer, Matrix>();
-				
+
 				/* Values for rows and columns padded */
 				nbRowsA = Utils.getBlockMultiple(
 						conf.getInt(inputMatrixARows, 4), blockSize);
@@ -65,7 +65,8 @@ public class StrassenMultiply {
 						conf.getInt(inputMatrixBRows, 4),
 						conf.getInt(inputMatrixBCols, 4), blockSize), nbRowsB,
 						nbColsB);
-				a.print();b.print();
+				a.print();
+				b.print();
 				System.out.println("A*B");
 				System.out.println(a.mult(b).toString());
 				int peerInd = 0;
@@ -92,10 +93,11 @@ public class StrassenMultiply {
 				throws IOException, SyncException, InterruptedException {
 			Matrix aBlock = aBlocks.get(peer.getPeerIndex());
 			Matrix bBlock = bBlocks.get(peer.getPeerIndex());
-			if(bBlock!=null){//TODO del if => manage peers
-			Matrix resBlock = aBlock.strassen(bBlock);
-			ResultMessage mes = new ResultMessage(peer.getPeerIndex(), resBlock);
-			peer.send(peer.getPeerName(0), mes);
+			if (bBlock != null) {// TODO del if => manage peers
+				Matrix resBlock = aBlock.strassen(bBlock);
+				ResultMessage mes = new ResultMessage(peer.getPeerIndex(),
+						resBlock);
+				peer.send(peer.getPeerName(0), mes);
 			}
 			peer.sync();
 		}
@@ -124,7 +126,8 @@ public class StrassenMultiply {
 				}
 				for (Integer peerInd : indices.keySet()) {
 					Integer[] inds = indices.get(peerInd);
-					if (resBlocks.get(peerInd) != null) {//TODO del if => manage peers
+					if (resBlocks.get(peerInd) != null) {// TODO del if =>
+															// manage peers
 						cBlocks[inds[0]][inds[1]] = cBlocks[inds[0]][inds[1]]
 								.sum(resBlocks.get(peerInd));
 					}
@@ -156,15 +159,16 @@ public class StrassenMultiply {
 			printUsage();
 			// TODO return;
 		} else {
-			if(parseArgs(args, conf, bsp)!=0){
-				//TODO return;
+			if (parseArgs(args, conf, bsp) != 0) {
+				// TODO return;
 			}
 		}
 
-	    long startTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 		if (bsp.waitForCompletion(true)) {
-			System.out.println("Job Finished in " + (System.currentTimeMillis() - startTime)
-			          / 1000.0 + " seconds.");
+			System.out.println("Job Finished in "
+					+ (System.currentTimeMillis() - startTime) / 1000.0
+					+ " seconds.");
 		}
 
 	}
@@ -176,42 +180,71 @@ public class StrassenMultiply {
 		conf.setInt(inputMatrixACols, Integer.parseInt(args[2]));
 		conf.set(inputMatrixBPathString, args[3]);
 		conf.setInt(inputMatrixBRows, Integer.parseInt(args[4]));
-		if(Integer.parseInt(args[2])!=Integer.parseInt(args[4])){
+		if (Integer.parseInt(args[2]) != Integer.parseInt(args[4])) {
 			System.out.println("Matrices size do not match.");
 			return 1;
 		}
 		conf.setInt(inputMatrixBCols, Integer.parseInt(args[5]));
 		bsp.setOutputPath(new Path(args[6]));
 		if (args.length > 7) {
-			bsp.setNumBspTask( Integer.parseInt(args[7]));
+			bsp.setNumBspTask(Integer.parseInt(args[7]));
 			if (args.length > 8) {
 				int n = Integer.parseInt(args[8]);
-				if((n & (n - 1)) != 0){
+				if ((n & (n - 1)) != 0) {
 					System.out.println("The block size must be a power of two");
 					return 1;
 				}
 				conf.setInt(blockSizeString, n);
 			} else {
-				/* set the size of blocks depending on the number of peers and matrices sizes */
-				/* let's assume square matrices : nbTasks = (RowSize/sizeBlock)^3 , */
-				int rows = conf.getInt(inputMatrixARows,4);
-				int n=2;
+				/*
+				 * set the size of blocks depending on the number of peers and
+				 * matrices sizes
+				 */
+				/*
+				 * let's assume square matrices : nbTasks =
+				 * (PaddedRowSize/sizeBlock)^3 ,
+				 */
+				int rows = conf.getInt(inputMatrixARows, 4);
+				int n = 2;
 				/* set n as the largest power of two smaller than row/2 */
-				while(n<rows/2){
-					n*=2;
+				while (n < rows / 2) {
+					n *= 2;
 				}
-				n/=2;
-				
-				int nbPeers=Integer.parseInt(args[7]);
-				/* lower the block size to make sure every peer has at least a task */
-				while(Math.pow(rows/n, 3)<nbPeers){
-					n/=2;
+				n /= 2;
+
+				int nbPeers = Integer.parseInt(args[7]);
+				/*
+				 * lower the block size to make sure every peer has at least a
+				 * task
+				 */
+				while (Math.pow(rows / n, 3) < nbPeers) {
+					n /= 2;
 				}
-				/* taking the future padding into account*/
-				n*=2;
-				System.out.println("SIZE :"+n);
+				/* taking the future padding into account */
+				n *= 2;
+				System.out.println("block size :" + n);
 				conf.setInt(blockSizeString, n);
 			}
+		} else {
+			/*
+			 * set the size of blocks depending on the number of peers and
+			 * matrices sizes
+			 */
+			/*
+			 * let's assume square matrices : nbTasks =
+			 * (PaddedRowSize/sizeBlock)^3 ,
+			 */
+			int rows = conf.getInt(inputMatrixARows, 4);
+			int n = 2;
+			/* set n as the largest power of two smaller than row/4 */
+			while (n < rows / 4) {
+				n *= 2;
+			}
+			conf.setInt(blockSizeString, n);
+			int tasks = (int) Math.pow((int) (rows / n), 3);
+			System.out.println("block size :" + n);
+			System.out.println("peers :" + tasks);
+			bsp.setNumBspTask(tasks);
 		}
 		return 0;
 	}
