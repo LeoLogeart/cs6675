@@ -67,7 +67,9 @@ public class StrassenMultiply {
 						conf.getInt(inputMatrixBRows, 4),
 						conf.getInt(inputMatrixBCols, 4), blockSize), nbRowsB,
 						nbColsB);
+				System.out.println("A");
 				a.print();
+				System.out.println("B");
 				b.print();
 				System.out.println("A*B");
 				System.out.println(a.mult(b).toString());
