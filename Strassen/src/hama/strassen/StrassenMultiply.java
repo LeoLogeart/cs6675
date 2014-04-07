@@ -179,6 +179,7 @@ public class StrassenMultiply {
 		// Set the job name
 		bsp.setJobName("Strassen Multiply");
 		bsp.setBspClass(StrassenBSP.class);
+		//bsp.setJar("strassen.jar");
 
 		// DELETE ////
 		bsp.setOutputPath(new Path("src/out"));
