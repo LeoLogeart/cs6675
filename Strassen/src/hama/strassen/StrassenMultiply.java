@@ -97,7 +97,6 @@ public class StrassenMultiply {
 					}
 				}
 			}
-
 			peer.sync();
 		}
 
@@ -105,7 +104,6 @@ public class StrassenMultiply {
 		public void bsp(
 				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> peer)
 				throws IOException, SyncException, InterruptedException {
-			JobMessage result = peer.getCurrentMessage();
 			if (peer.getPeerIndex()==0){
 				resBlocks = new HashMap<Integer, List<Matrix>>();
 				resBlocks.put(0, new ArrayList<Matrix>());
@@ -117,6 +115,7 @@ public class StrassenMultiply {
 					peerBlocks.add(resBlock);
 				}
 			} else {
+				JobMessage result = peer.getCurrentMessage();
 				while (result != null) {
 					int i = result.getI();
 					int j = result.getJ();
@@ -127,9 +126,9 @@ public class StrassenMultiply {
 					JobMessage mes = new JobMessage(1, peer.getPeerIndex(),
 							resBlock);
 					peer.send(peer.getPeerName(0), mes);
+					result = peer.getCurrentMessage();
 				}
 			}
-			
 			peer.sync();
 		}
 
@@ -175,7 +174,6 @@ public class StrassenMultiply {
 				c.print();
 			}
 		}
-
 	}
 
 	public static void main(String[] args) throws Exception {

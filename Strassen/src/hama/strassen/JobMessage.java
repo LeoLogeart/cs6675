@@ -51,10 +51,12 @@ public class JobMessage implements Writable{
 	@Override
 	public void write(DataOutput out) throws IOException {
 		if (type==0){
+			out.writeInt(type);
 			out.writeInt(i);
 			out.writeInt(j);
 			out.writeInt(k);
 		} else if (type==1){
+			out.writeInt(type);
 			out.writeInt(sender);
 			DoubleMatrixWritable.write(result, out);
 		}
