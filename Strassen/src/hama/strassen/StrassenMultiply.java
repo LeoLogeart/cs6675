@@ -65,14 +65,12 @@ public class StrassenMultiply {
 					conf.getInt(inputMatrixBCols, 4), blockSize), nbRowsB,
 					nbColsB);
 			if (peer.getPeerIndex() == 0) {
-				System.out.println("A");
-				a.print();
-				System.out.println("B");
-				b.print();
-				System.out.println("A*B");
-				System.out.println(a.mult(b).toString());
-
-				int peerInd = 0;
+				/*
+				 * System.out.println("A"); a.print(); System.out.println("B");
+				 * b.print(); System.out.println("A*B");
+				 * System.out.println(a.mult(b).toString());
+				 */
+			int peerInd = 0;
 				indices = new HashMap<Integer, List<Integer[]>>();
 				for (int i = 0; i < nbRowsA / blockSize; i++) {
 					for (int j = 0; j < nbColsB / blockSize; j++) {
@@ -188,10 +186,10 @@ public class StrassenMultiply {
 
 		if (args.length < 6 || args.length > 10) {
 			printUsage();
-			// TODO return;
+			return;
 		} else {
 			if (parseArgs(args, conf, bsp) != 0) {
-				// TODO return;
+				return;
 			}
 		}
 
@@ -201,13 +199,13 @@ public class StrassenMultiply {
 					+ (System.currentTimeMillis() - startTime) / 1000.0
 					+ " seconds.");
 		}
-		
+		/*
 		double[][] cValues = Utils.readMatrix(new Path(args[7]), conf,
 				Integer.parseInt(args[1]), Integer.parseInt(args[5]),
 				Integer.parseInt(args[9]));
 		Matrix c = new Matrix(cValues, Integer.parseInt(args[1]),
 				Integer.parseInt(args[5]));
-		c.print();
+		c.print();*/
 
 	}
 
