@@ -54,7 +54,7 @@ public class Utils {
 			reader = new SequenceFile.Reader(fs, path, conf);
 			VectorWritable row = new VectorWritable();
 			IntWritable i = new IntWritable();
-			while (reader.next(i, row)) {
+			while (reader.next(i, row) && i.get()<rows) {
 				DoubleVector v = row.getVector();
 				for (int j = 0; j < columns; j++) {
 					matrix[i.get()][j] = v.get(j);
