@@ -39,7 +39,15 @@ public class MatUtils {
 	}
 
 	public static void main(String[] args) {
+		if(args.length==0){
+			printUsage();
+			return;
+		}
 		if (args[0].equals("read")) {
+			if(args.length!=4){
+				printUsage();
+				return;
+			}
 			double[][] cValues = Utils.readMatrix(new Path(args[1]),
 					new HamaConfiguration(), Integer.parseInt(args[2]),
 					Integer.parseInt(args[3]), 1);
@@ -47,6 +55,10 @@ public class MatUtils {
 					Integer.parseInt(args[3]));
 			c.print();
 		} else if (args[0].equals("gen")) {
+			if(args.length!=4){
+				printUsage();
+				return;
+			}
 			int rowSize = Integer.parseInt(args[1]);
 			int colSize = Integer.parseInt(args[2]);
 			Path outputPath = new Path(args[3]);
@@ -56,6 +68,10 @@ public class MatUtils {
 			MatrixGenerator.writeMatrix(matrix, outputPath,
 					new HamaConfiguration());
 		} else if (args[0].equals("cmp")) {
+			if(args.length!=5){
+				printUsage();
+				return;
+			}
 			int rows = Integer.parseInt(args[3]);
 			double[][] aValues = Utils
 					.readMatrix(new Path(args[1]), new HamaConfiguration(),
@@ -67,7 +83,7 @@ public class MatUtils {
 			boolean eq = true;
 			int i = 0;
 			while (i < rows && eq) {
-				Arrays.equals(aValues[i], bValues[i]);
+				eq=Arrays.equals(aValues[i], bValues[i]);
 				i++;
 			}
 			if (eq) {
@@ -76,6 +92,10 @@ public class MatUtils {
 				System.out.println("Matrices do not match");
 			}
 		} else if (args[0].equals("hamaSetup")) {
+			if(args.length!=2){
+				printUsage();
+				return;
+			}
 			HamaConfiguration conf = new HamaConfiguration();
 			BSPJob bsp;
 			try {
