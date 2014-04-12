@@ -38,12 +38,14 @@ public class Utils {
 		}
 		return path;
 	}
-	
-	// Reads matrix from dfs and pads it to have rows and columns dividable by blocksize
-	public static double[][] readMatrix(Path path, HamaConfiguration conf, int rows, int columns, int blockSize){
 
-		int finalRows=getBlockMultiple(rows, blockSize);
-		int finalCols=getBlockMultiple(columns,blockSize);
+	// Reads matrix from dfs and pads it to have rows and columns dividable by
+	// blocksize
+	public static double[][] readMatrix(Path path, HamaConfiguration conf,
+			int rows, int columns, int blockSize) {
+
+		int finalRows = getBlockMultiple(rows, blockSize);
+		int finalCols = getBlockMultiple(columns, blockSize);
 
 		double[][] matrix = new double[finalRows][finalCols];
 		SequenceFile.Reader reader = null;
@@ -52,16 +54,16 @@ public class Utils {
 			reader = new SequenceFile.Reader(fs, path, conf);
 			VectorWritable row = new VectorWritable();
 			IntWritable i = new IntWritable();
-			while(reader.next(i,row)){
+			while (reader.next(i, row) && i.get()<rows) {
 				DoubleVector v = row.getVector();
-				for (int j=0;j<columns;j++){
-					matrix[i.get()][j]=v.get(j);
+				for (int j = 0; j < columns; j++) {
+					matrix[i.get()][j] = v.get(j);
 				}
 			}
-		} catch (IOException e){
+		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			if (reader!=null){
+			if (reader != null) {
 				try {
 					reader.close();
 				} catch (IOException e) {
@@ -80,9 +82,9 @@ public class Utils {
 
 	public static int getBlockMultiple(int size, int blockSize) {
 		int res = size;
-			if(res%blockSize!=0){
-				res=res+blockSize-(res%blockSize);
-			}
+		if (res % blockSize != 0) {
+			res = res + blockSize - (res % blockSize);
+		}
 		return res;
 	}
 
