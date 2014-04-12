@@ -31,8 +31,6 @@ public class StrassenMultiply {
 		private int nbRowsB;
 		private int nbColsB;
 		private int blockSize = 2;
-		private Matrix a;
-		private Matrix b;
 
 		@Override
 		public void setup(
@@ -50,17 +48,6 @@ public class StrassenMultiply {
 					blockSize);
 			nbColsB = Utils.getBlockMultiple(conf.getInt(inputMatrixBCols, 4),
 					blockSize);
-			a = new Matrix(Utils.readMatrix(
-					new Path(conf.get(inputMatrixAPathString)),
-					peer.getConfiguration(), conf.getInt(inputMatrixARows, 4),
-					conf.getInt(inputMatrixACols, 4), blockSize), nbRowsA,
-					nbColsA);
-			b = new Matrix(Utils.readMatrix(
-					new Path(conf.get(inputMatrixBPathString)),
-					peer.getConfiguration(), conf.getInt(inputMatrixBRows, 4),
-					conf.getInt(inputMatrixBCols, 4), blockSize), nbRowsB,
-					nbColsB);
-			a.mult(b).print();
 		}
 
 		@Override
@@ -89,8 +76,7 @@ public class StrassenMultiply {
 				}
 			}
 			
-			int aILast = lastBlock/nbColsBlocks*blockSize;
-			System.out.println(aILast);
+			int aILast = ((lastBlock-1)/nbColsBlocks)*blockSize+blockSize;
 			int bILast = nbRowsBlocks*blockSize;
 			
 			HamaConfiguration conf = peer.getConfiguration();
@@ -114,11 +100,6 @@ public class StrassenMultiply {
 				}
 				resBlock = resBlock.sum(aBlock.getBlock().strassen(bBlock.getBlock()));
 				resBlocks.put(ind, resBlock);
-			}
-			
-			for (String ind : resBlocks.keySet()){
-				System.out.println(ind);
-				resBlocks.get(ind).print();
 			}
 		}
 	}
