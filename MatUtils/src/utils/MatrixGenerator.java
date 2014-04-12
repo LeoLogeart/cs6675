@@ -1,7 +1,6 @@
 package utils;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Random;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -40,7 +39,7 @@ public class MatrixGenerator {
 				double randomValue = rangeMin + (rangeMax - rangeMin)
 						* rand.nextDouble();
 
-				matrix[i][j] = new BigDecimal(randomValue).doubleValue();
+				matrix[i][j] = randomValue;
 			}
 		}
 		return matrix;
