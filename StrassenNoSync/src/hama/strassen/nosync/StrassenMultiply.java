@@ -1,6 +1,8 @@
 package hama.strassen.nosync;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -58,6 +60,7 @@ public class StrassenMultiply {
 					peer.getConfiguration(), conf.getInt(inputMatrixBRows, 4),
 					conf.getInt(inputMatrixBCols, 4), blockSize), nbRowsB,
 					nbColsB);
+			a.mult(b).print();
 		}
 
 		@Override
@@ -73,17 +76,49 @@ public class StrassenMultiply {
 			if (p==peer.getNumPeers()-1) {
 				lastBlock = nbBlocks;
 			}
-			// Peer p gets blocks p*blocksPerPeer -> (p+1)blocksPerPeer
+			ArrayList<Block> aBlocks = new ArrayList<Block>();
+			ArrayList<Block> bBlocks = new ArrayList<Block>();
 			for (int block = p*blocksPerPeer; block<lastBlock; block++){
 				int i = block/nbColsBlocks;
-				int j = block%nbColsBlocks;
-				Matrix resBlock = new Matrix(blockSize, blockSize);
-				resBlock.zeroes();
+				int j = block%nbColsBlocks;			
 				for (int k = 0; k < nbRowsBlocks; k++) {
-					Matrix aBlock = a.getBlock(i, k, blockSize);
-					Matrix bBlock = b.getBlock(k, j, blockSize);
-					resBlock = resBlock.sum(aBlock.strassen(bBlock));
+					Block aBlock = new Block(i, k, blockSize);
+					aBlocks.add(aBlock);
+					Block bBlock = new Block(k,j,blockSize);
+					bBlocks.add(bBlock);
 				}
+			}
+			
+			int aILast = lastBlock/nbColsBlocks*blockSize;
+			System.out.println(aILast);
+			int bILast = nbRowsBlocks*blockSize;
+			
+			HamaConfiguration conf = peer.getConfiguration();
+			int rows = conf.getInt(inputMatrixARows, 4);
+			int cols = conf.getInt(inputMatrixACols, 4);
+			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixAPathString)), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
+			rows = conf.getInt(inputMatrixBRows, 4);
+			cols = conf.getInt(inputMatrixBCols, 4);
+			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
+			
+			HashMap<String, Matrix> resBlocks = new HashMap<>();
+			
+			for (int b = 0; b<aBlocks.size(); b++){
+				Block aBlock = aBlocks.get(b);
+				Block bBlock = bBlocks.get(b);
+				String ind = aBlock.getI() + "," + bBlock.getJ();
+				Matrix resBlock = resBlocks.get(ind);
+				if (resBlock==null){
+					resBlock = new Matrix(blockSize,blockSize);
+					resBlock.zeroes();
+				}
+				resBlock = resBlock.sum(aBlock.getBlock().strassen(bBlock.getBlock()));
+				resBlocks.put(ind, resBlock);
+			}
+			
+			for (String ind : resBlocks.keySet()){
+				System.out.println(ind);
+				resBlocks.get(ind).print();
 			}
 		}
 	}
@@ -94,7 +129,7 @@ public class StrassenMultiply {
 		// Set the job name
 		bsp.setJobName("Strassen Multiply");
 		bsp.setBspClass(StrassenBSP.class);
-		bsp.setJar("strassen.jar");
+		//bsp.setJar("strassen.jar");
 
 		if (args.length < 6 || args.length > 10) {
 			printUsage();

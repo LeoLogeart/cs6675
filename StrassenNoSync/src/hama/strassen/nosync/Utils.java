@@ -1,6 +1,7 @@
 package hama.strassen.nosync;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -79,6 +80,42 @@ public class Utils {
 		}
 		return matrix;
 	}
+	
+	public static void readMatrixBlocks(Path path, HamaConfiguration conf, int rows, int cols, int blockSize, int lastI, List<Block> emptyBlocks) {
+		SequenceFile.Reader reader = null;
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			reader = new SequenceFile.Reader(fs, path, conf);
+			VectorWritable row = new VectorWritable();
+			IntWritable i = new IntWritable();
+			while (reader.next(i, row) && i.get()<lastI) {
+				for (Block b : emptyBlocks){
+					int blockI = b.getI();
+					int blockJ = b.getJ();
+					if (i.get()>=blockI*blockSize && (i.get()<blockI*blockSize+blockSize)){
+						DoubleVector v = row.getVector();
+						for (int j=blockJ*blockSize;j<blockJ*blockSize+blockSize;j++){
+							if (j<cols){
+								b.setValue(i.get()%blockSize, j%blockSize, v.get(j));
+							}
+						}
+					}
+				}	
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	
 
 	public static int getBlockMultiple(int size, int blockSize) {
 		int res = size;
