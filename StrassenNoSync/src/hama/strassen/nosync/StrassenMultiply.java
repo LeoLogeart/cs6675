@@ -24,7 +24,7 @@ public class StrassenMultiply {
 
 	public static class StrassenBSP
 			extends
-			BSP<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> {
+			BSP<NullWritable, NullWritable, NullWritable, NullWritable, NullWritable> {
 
 		private int nbRowsA;
 		private int nbColsB;
@@ -32,7 +32,7 @@ public class StrassenMultiply {
 
 		@Override
 		public void setup(
-				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> peer)
+				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, NullWritable> peer)
 				throws IOException, SyncException, InterruptedException {
 			HamaConfiguration conf = peer.getConfiguration();
 			blockSize = conf.getInt(blockSizeString, 2);
@@ -40,17 +40,13 @@ public class StrassenMultiply {
 			/* Values for rows and columns padded */
 			nbRowsA = Utils.getBlockMultiple(conf.getInt(inputMatrixARows, 4),
 					blockSize);
-//			nbColsA = Utils.getBlockMultiple(conf.getInt(inputMatrixACols, 4),
-//					blockSize);
-//			nbRowsB = Utils.getBlockMultiple(conf.getInt(inputMatrixBRows, 4),
-//					blockSize);
 			nbColsB = Utils.getBlockMultiple(conf.getInt(inputMatrixBCols, 4),
 					blockSize);
 		}
 
 		@Override
 		public void bsp(
-				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> peer)
+				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, NullWritable> peer)
 				throws IOException, SyncException, InterruptedException {
 			int nbRowsBlocks = nbRowsA / blockSize;
 			int nbColsBlocks = nbColsB / blockSize;
@@ -80,27 +76,12 @@ public class StrassenMultiply {
 			HamaConfiguration conf = peer.getConfiguration();
 			int rows = conf.getInt(inputMatrixARows, 4);
 			int cols = conf.getInt(inputMatrixACols, 4);
-			//TODO change reader
-			long startTime = 0;
-			if (peer.getPeerIndex()==0){
-				startTime = System.currentTimeMillis();
-			}
-			peer.sync();
 
 			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixAPathString)), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
 			rows = conf.getInt(inputMatrixBRows, 4);
 			cols = conf.getInt(inputMatrixBCols, 4);
-			//TODO change reader
 			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
-			peer.sync();
-			if (peer.getPeerIndex()==0){
-				System.out.println("Time to read :" + (System.currentTimeMillis() - startTime) / 1000.0
-					+ " seconds.");
-			}
 			
-			if (peer.getPeerIndex()==0){
-				startTime = System.currentTimeMillis();
-			}
 			HashMap<String, Matrix> resBlocks = new HashMap<>();
 			
 			for (int b = 0; b<aBlocks.size(); b++){
@@ -116,9 +97,10 @@ public class StrassenMultiply {
 				resBlocks.put(ind, resBlock);
 			}
 			
-			if (peer.getPeerIndex()==0){
-				System.out.println("Time to compute :" + (System.currentTimeMillis() - startTime) / 1000.0
-					+ " seconds.");
+			for (String ind : resBlocks.keySet()){
+				Matrix block = resBlocks.get(ind);
+				Path path = new Path(conf.get(inputMatrixCPathString)+"/"+ind);
+				Utils.writeMatrix(block.getValues(), path, conf);
 			}
 		}
 	}
@@ -131,7 +113,7 @@ public class StrassenMultiply {
 		bsp.setBspClass(StrassenBSP.class);
 		//bsp.setJar("strassen.jar");
 
-		if (args.length < 6 || args.length > 10) {
+		if (args.length < 7 || args.length > 9) {
 			printUsage();
 			return;
 		} else {
@@ -146,14 +128,6 @@ public class StrassenMultiply {
 					+ (System.currentTimeMillis() - startTime) / 1000.0
 					+ " seconds.");
 		}
-		/*
-		double[][] cValues = Utils.readMatrix(new Path(args[7]), conf,
-				Integer.parseInt(args[1]), Integer.parseInt(args[5]),
-				Integer.parseInt(args[9]));
-		Matrix c = new Matrix(cValues, Integer.parseInt(args[1]),
-				Integer.parseInt(args[5]));
-		c.print();*/
-
 	}
 
 	private static int parseArgs(String[] args, HamaConfiguration conf,
@@ -169,11 +143,11 @@ public class StrassenMultiply {
 		}
 		conf.setInt(inputMatrixBCols, Integer.parseInt(args[5]));
 		bsp.setOutputPath(new Path(args[6]));
-		conf.set(inputMatrixCPathString, args[7]);
-		if (args.length > 8) {
-			bsp.setNumBspTask(Integer.parseInt(args[8]));
-			if (args.length > 9) {
-				int n = Integer.parseInt(args[9]);
+		conf.set(inputMatrixCPathString, args[6]);
+		if (args.length > 7) {
+			bsp.setNumBspTask(Integer.parseInt(args[7]));
+			if (args.length > 8) {
+				int n = Integer.parseInt(args[8]);
 				if ((n & (n - 1)) != 0) {
 					System.out.println("The block size must be a power of two");
 					return 1;
@@ -196,7 +170,7 @@ public class StrassenMultiply {
 				}
 				n /= 2;
 
-				int nbPeers = Integer.parseInt(args[8]);
+				int nbPeers = Integer.parseInt(args[7]);
 				/*
 				 * lower the block size to make sure every peer has at least a
 				 * task
@@ -236,6 +210,6 @@ public class StrassenMultiply {
 	private static void printUsage() {
 		System.out
 				.println("Usage: StrassenMultiply <path A> <number rows A> <number columns A>"
-						+ "<path B> <number rows B> <number columns B> <path output> <path C> [number of tasks] [block size]");
+						+ "<path B> <number rows B> <number columns B> <path output> [number of tasks] [block size]");
 	}
 }

@@ -88,15 +88,6 @@ public class Matrix{
 		return nbCols;
 	}
 
-	/**
-	 * True only if square matrix
-	 * 
-	 * @return
-	 */
-	public int size() {
-		return nbCols;
-	}
-
 	public Matrix sum(Matrix a) {
 		Matrix c = new Matrix(a);
 		
@@ -177,7 +168,6 @@ public class Matrix{
 		if (b.getNbRows() <= 32) {
 			return mult(b);
 		} else {
-			long start = System.currentTimeMillis();
 			Matrix m1 = get11().sum(get22()).strassen(b.get11().sum(b.get22()));
 			Matrix m2 = get21().sum(get22()).strassen(b.get11());
 			Matrix m3 = get11().strassen(b.get12().diff(b.get22()));
