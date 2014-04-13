@@ -80,10 +80,12 @@ public class StrassenMultiply {
 			HamaConfiguration conf = peer.getConfiguration();
 			int rows = conf.getInt(inputMatrixARows, 4);
 			int cols = conf.getInt(inputMatrixACols, 4);
-			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixAPathString)), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
+			//TODO change reader
+			Utils.readMatrixBlocks2(new Path(conf.get(inputMatrixAPathString)), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
 			rows = conf.getInt(inputMatrixBRows, 4);
 			cols = conf.getInt(inputMatrixBCols, 4);
-			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
+			//TODO change reader
+			Utils.readMatrixBlocks2(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
 
 
 			HashMap<String, Matrix> resBlocks = new HashMap<>();
