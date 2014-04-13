@@ -54,6 +54,17 @@ public class MatUtils {
 			Matrix c = new Matrix(cValues, Integer.parseInt(args[2]),
 					Integer.parseInt(args[3]));
 			c.print();
+		} else if (args[0].equals("read2")) {
+			if(args.length!=4){
+				printUsage();
+				return;
+			}
+			double[][] cValues = Utils.readMatrix2(new Path(args[1]),
+					new HamaConfiguration(), Integer.parseInt(args[2]),
+					Integer.parseInt(args[3]), 1);
+			Matrix c = new Matrix(cValues, Integer.parseInt(args[2]),
+					Integer.parseInt(args[3]));
+			c.print();
 		} else if (args[0].equals("gen")) {
 			if(args.length!=4){
 				printUsage();
@@ -67,7 +78,20 @@ public class MatUtils {
 					colSize, new Random(), 0, 100);
 			MatrixGenerator.writeMatrix(matrix, outputPath,
 					new HamaConfiguration());
-		} else if (args[0].equals("cmp")) {
+		} else if (args[0].equals("gen2")) {
+			if(args.length!=4){
+				printUsage();
+				return;
+			}
+			int rowSize = Integer.parseInt(args[1]);
+			int colSize = Integer.parseInt(args[2]);
+			Path outputPath = new Path(args[3]);
+
+			double[][] matrix = MatrixGenerator.createRandomMatrix(rowSize,
+					colSize, new Random(), 0, 100);
+			MatrixGenerator.writeMatrix2(matrix, outputPath,
+					new HamaConfiguration());
+		}else if (args[0].equals("cmp")) {
 			if(args.length!=5){
 				printUsage();
 				return;

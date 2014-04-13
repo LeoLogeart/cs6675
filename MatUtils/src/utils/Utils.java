@@ -1,6 +1,8 @@
 package utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -86,6 +88,42 @@ public class Utils {
 			res = res + blockSize - (res % blockSize);
 		}
 		return res;
+	}
+
+	public static double[][] readMatrix2(Path path,
+			HamaConfiguration conf, int rows, int columns,
+			int blockSize) {
+		int finalRows = getBlockMultiple(rows, blockSize);
+		int finalCols = getBlockMultiple(columns, blockSize);
+
+		double[][] matrix = new double[finalRows][finalCols];
+		int i=0;
+		String[] row;
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					fs.open(path)) );
+            String line=br.readLine();
+            while (line != null && i<rows){
+                row = line.split(",");
+            	for(int j=0 ; j < columns ; j++){
+            		matrix[i][j]=Double.parseDouble(row[j]);
+            	}
+            	i++;
+                line=br.readLine();
+            }
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+
+		for (int k = rows; k < finalRows; k++) {
+			for (int p = columns; p < finalCols; p++) {
+				matrix[k][p] = 0;
+			}
+		}
+		return matrix;
 	}
 
 }

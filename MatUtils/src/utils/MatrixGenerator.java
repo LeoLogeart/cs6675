@@ -1,6 +1,8 @@
 package utils;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Random;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -69,5 +71,23 @@ public class MatrixGenerator {
 			}
 		}
 		return path;
+	}
+
+	public static void writeMatrix2(double[][] matrix, Path path,
+			HamaConfiguration conf) {
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			BufferedWriter br = new BufferedWriter(new OutputStreamWriter(
+					fs.create(path, true)));
+			for (int j = 0; j < matrix[0].length; j++) {
+				for (int i = 0; i < matrix.length; i++) {
+					br.write(String.valueOf(matrix[i][j])+",");
+				}
+				br.write("\n");
+			}
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

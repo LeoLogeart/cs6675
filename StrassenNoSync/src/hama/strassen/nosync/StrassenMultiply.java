@@ -27,8 +27,6 @@ public class StrassenMultiply {
 			BSP<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> {
 
 		private int nbRowsA;
-		private int nbColsA;
-		private int nbRowsB;
 		private int nbColsB;
 		private int blockSize = 2;
 
@@ -42,10 +40,10 @@ public class StrassenMultiply {
 			/* Values for rows and columns padded */
 			nbRowsA = Utils.getBlockMultiple(conf.getInt(inputMatrixARows, 4),
 					blockSize);
-			nbColsA = Utils.getBlockMultiple(conf.getInt(inputMatrixACols, 4),
-					blockSize);
-			nbRowsB = Utils.getBlockMultiple(conf.getInt(inputMatrixBRows, 4),
-					blockSize);
+//			nbColsA = Utils.getBlockMultiple(conf.getInt(inputMatrixACols, 4),
+//					blockSize);
+//			nbRowsB = Utils.getBlockMultiple(conf.getInt(inputMatrixBRows, 4),
+//					blockSize);
 			nbColsB = Utils.getBlockMultiple(conf.getInt(inputMatrixBCols, 4),
 					blockSize);
 		}
@@ -86,7 +84,7 @@ public class StrassenMultiply {
 			rows = conf.getInt(inputMatrixBRows, 4);
 			cols = conf.getInt(inputMatrixBCols, 4);
 			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
-			
+			peer.sync();
 			HashMap<String, Matrix> resBlocks = new HashMap<>();
 			
 			for (int b = 0; b<aBlocks.size(); b++){
@@ -110,7 +108,7 @@ public class StrassenMultiply {
 		// Set the job name
 		bsp.setJobName("Strassen Multiply");
 		bsp.setBspClass(StrassenBSP.class);
-		//bsp.setJar("strassen.jar");
+		bsp.setJar("strassen.jar");
 
 		if (args.length < 6 || args.length > 10) {
 			printUsage();
