@@ -125,8 +125,7 @@ public class Matrix{
 	public Matrix get11() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i = 0; i < nbRows / 2; i++) {
-			m[i] = Arrays.copyOfRange(values[i], 0, nbCols / 2);// TODO
-																// nbRows/2-1?
+			m[i] = Arrays.copyOfRange(values[i], 0, nbCols / 2);
 		}
 		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m11;
@@ -135,7 +134,7 @@ public class Matrix{
 	public Matrix get12() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i = 0; i < nbRows / 2; i++) {
-			m[i] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);// TODO nbRows/2-1?
+			m[i] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);
 		}
 		Matrix m12 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m12;
@@ -144,7 +143,7 @@ public class Matrix{
 	public Matrix get21() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i =  nbRows / 2; i < nbRows ; i++) {
-			m[i-nbRows/2] = Arrays.copyOfRange(values[i], 0, nbCols / 2 );// TODO nbRows/2-1?
+			m[i-nbRows/2] = Arrays.copyOfRange(values[i], 0, nbCols / 2 );
 		}
 		Matrix m21 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m21;
@@ -153,7 +152,7 @@ public class Matrix{
 	public Matrix get22() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i =  nbRows / 2; i < nbRows ; i++) {
-			m[i-nbRows/2] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);// TODO nbRows/2-1?
+			m[i-nbRows/2] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);
 		}
 		Matrix m22 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m22;
@@ -177,7 +176,6 @@ public class Matrix{
 		if (b.getNbRows() <= 32) {
 			return mult(b);
 		} else {
-			long start = System.currentTimeMillis();
 			Matrix m1 = get11().sum(get22()).strassen(b.get11().sum(b.get22()));
 			Matrix m2 = get21().sum(get22()).strassen(b.get11());
 			Matrix m3 = get11().strassen(b.get12().diff(b.get22()));
