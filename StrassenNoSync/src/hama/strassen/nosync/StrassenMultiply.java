@@ -81,13 +81,26 @@ public class StrassenMultiply {
 			int rows = conf.getInt(inputMatrixARows, 4);
 			int cols = conf.getInt(inputMatrixACols, 4);
 			//TODO change reader
-			Utils.readMatrixBlocks2(new Path(conf.get(inputMatrixAPathString)), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
+			long startTime = 0;
+			if (peer.getPeerIndex()==0){
+				startTime = System.currentTimeMillis();
+			}
+			peer.sync();
+
+			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixAPathString)), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
 			rows = conf.getInt(inputMatrixBRows, 4);
 			cols = conf.getInt(inputMatrixBCols, 4);
 			//TODO change reader
-			Utils.readMatrixBlocks2(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
-
-
+			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
+			peer.sync();
+			if (peer.getPeerIndex()==0){
+				System.out.println("Time to read :" + (System.currentTimeMillis() - startTime) / 1000.0
+					+ " seconds.");
+			}
+			
+			if (peer.getPeerIndex()==0){
+				startTime = System.currentTimeMillis();
+			}
 			HashMap<String, Matrix> resBlocks = new HashMap<>();
 			
 			for (int b = 0; b<aBlocks.size(); b++){
@@ -102,6 +115,11 @@ public class StrassenMultiply {
 				resBlock = resBlock.sum(aBlock.getBlock().strassen(bBlock.getBlock()));
 				resBlocks.put(ind, resBlock);
 			}
+			
+			if (peer.getPeerIndex()==0){
+				System.out.println("Time to compute :" + (System.currentTimeMillis() - startTime) / 1000.0
+					+ " seconds.");
+			}
 		}
 	}
 
@@ -111,7 +129,7 @@ public class StrassenMultiply {
 		// Set the job name
 		bsp.setJobName("Strassen Multiply");
 		bsp.setBspClass(StrassenBSP.class);
-		bsp.setJar("strassen.jar");
+		//bsp.setJar("strassen.jar");
 
 		if (args.length < 6 || args.length > 10) {
 			printUsage();

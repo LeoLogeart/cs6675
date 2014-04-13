@@ -174,10 +174,10 @@ public class Matrix{
 	}
 
 	public Matrix strassen(Matrix b) {
-		if (b.getNbRows() == 1) {
-			double[][] val = { { get(0, 0) * b.get(0, 0) } };
-			return new Matrix(val, 1, 1);
+		if (b.getNbRows() <= 32) {
+			return mult(b);
 		} else {
+			long start = System.currentTimeMillis();
 			Matrix m1 = get11().sum(get22()).strassen(b.get11().sum(b.get22()));
 			Matrix m2 = get21().sum(get22()).strassen(b.get11());
 			Matrix m3 = get11().strassen(b.get12().diff(b.get22()));
@@ -193,7 +193,8 @@ public class Matrix{
 			Matrix c21 = m2.sum(m4);
 			Matrix c22 = m1.diff(m2).sum(m3).sum(m6);
 
-			return new Matrix(c11, c12, c21, c22);
+			Matrix c = new Matrix(c11, c12, c21, c22);
+			return c;
 		}
 	}
 	
