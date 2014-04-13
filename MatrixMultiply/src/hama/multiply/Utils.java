@@ -1,6 +1,9 @@
 package hama.multiply;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -54,7 +57,7 @@ public class Utils {
 			reader = new SequenceFile.Reader(fs, path, conf);
 			VectorWritable row = new VectorWritable();
 			IntWritable i = new IntWritable();
-			while (reader.next(i, row) && i.get()<rows) {
+			while (reader.next(i, row) && i.get() < rows) {
 				DoubleVector v = row.getVector();
 				for (int j = 0; j < columns; j++) {
 					matrix[i.get()][j] = v.get(j);
@@ -78,6 +81,86 @@ public class Utils {
 			}
 		}
 		return matrix;
+	}
+
+	public static void readMatrixBlocks(Path path, HamaConfiguration conf,
+			int rows, int cols, int blockSize, int lastI,
+			List<Block> emptyBlocks) {
+		SequenceFile.Reader reader = null;
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			reader = new SequenceFile.Reader(fs, path, conf);
+			VectorWritable row = new VectorWritable();
+			IntWritable i = new IntWritable();
+			while (reader.next(i, row) && i.get() < lastI) {
+				for (Block b : emptyBlocks) {
+					int blockI = b.getI();
+					int blockJ = b.getJ();
+					if (i.get() >= blockI * blockSize
+							&& (i.get() < blockI * blockSize + blockSize)) {
+						DoubleVector v = row.getVector();
+						for (int j = blockJ * blockSize; j < blockJ * blockSize
+								+ blockSize; j++) {
+							if (j < cols) {
+								b.setValue(i.get() % blockSize, j % blockSize,
+										v.get(j));
+							}
+						}
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	public static void readMatrixBlocks2(Path path, HamaConfiguration conf,
+			int rows, int cols, int blockSize, int lastI,
+			List<Block> emptyBlocks) {
+		int i = 0;
+		String[] row;
+		BufferedReader br =null;
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			br = new BufferedReader(new InputStreamReader(
+					fs.open(path)));
+			String line = br.readLine();
+			while (line != null && i < lastI) {
+				for (Block b : emptyBlocks) {
+					int blockI = b.getI();
+					int blockJ = b.getJ();
+					if (i >= blockI * blockSize
+							&& (i < blockI * blockSize + blockSize)) {
+						row = line.split(",");
+						for (int j = blockJ * blockSize; j < blockJ * blockSize
+								+ blockSize; j++) {
+							if (j < cols) {
+								b.setValue(i % blockSize, j % blockSize,
+										Double.parseDouble(row[j]));
+							}
+						}
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	public static int getBlockMultiple(int size, int blockSize) {

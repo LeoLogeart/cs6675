@@ -88,17 +88,6 @@ public class Matrix{
 		return nbCols;
 	}
 
-	/**
-	 * True only if square matrix
-	 * 
-	 * @return
-	 */
-	public int size() {
-		return nbCols;
-	}
-
-
-
 	public Matrix sum(Matrix a) {
 		Matrix c = new Matrix(a);
 		
@@ -127,8 +116,7 @@ public class Matrix{
 	public Matrix get11() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i = 0; i < nbRows / 2; i++) {
-			m[i] = Arrays.copyOfRange(values[i], 0, nbCols / 2);// TODO
-																// nbRows/2-1?
+			m[i] = Arrays.copyOfRange(values[i], 0, nbCols / 2);
 		}
 		Matrix m11 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m11;
@@ -137,7 +125,7 @@ public class Matrix{
 	public Matrix get12() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i = 0; i < nbRows / 2; i++) {
-			m[i] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);// TODO nbRows/2-1?
+			m[i] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);
 		}
 		Matrix m12 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m12;
@@ -146,7 +134,7 @@ public class Matrix{
 	public Matrix get21() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i =  nbRows / 2; i < nbRows ; i++) {
-			m[i-nbRows/2] = Arrays.copyOfRange(values[i], 0, nbCols / 2 );// TODO nbRows/2-1?
+			m[i-nbRows/2] = Arrays.copyOfRange(values[i], 0, nbCols / 2 );
 		}
 		Matrix m21 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m21;
@@ -155,7 +143,7 @@ public class Matrix{
 	public Matrix get22() {
 		double[][] m = new double[nbRows / 2][nbCols / 2];
 		for (int i =  nbRows / 2; i < nbRows ; i++) {
-			m[i-nbRows/2] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);// TODO nbRows/2-1?
+			m[i-nbRows/2] = Arrays.copyOfRange(values[i], nbCols / 2, nbCols);
 		}
 		Matrix m22 = new Matrix(m, nbRows / 2, nbCols / 2);
 		return m22;
@@ -175,8 +163,30 @@ public class Matrix{
 		return block;
 	}
 
-	
+	public Matrix strassen(Matrix b) {
+		if (b.getNbRows() <= 32) {
+			return mult(b);
+		} else {
+			Matrix m1 = get11().sum(get22()).strassen(b.get11().sum(b.get22()));
+			Matrix m2 = get21().sum(get22()).strassen(b.get11());
+			Matrix m3 = get11().strassen(b.get12().diff(b.get22()));
+			Matrix m4 = get22().strassen(b.get21().diff(b.get11()));
+			Matrix m5 = get11().sum(get12()).strassen(b.get22());
+			Matrix m6 = get21().diff(get11())
+					.strassen(b.get11().sum(b.get12()));
+			Matrix m7 = get12().diff(get22())
+					.strassen(b.get21().sum(b.get22()));
 
+			Matrix c11 = m1.sum(m4).diff(m5).sum(m7);
+			Matrix c12 = m3.sum(m5);
+			Matrix c21 = m2.sum(m4);
+			Matrix c22 = m1.diff(m2).sum(m3).sum(m6);
+
+			Matrix c = new Matrix(c11, c12, c21, c22);
+			return c;
+		}
+	}
+	
 	public Matrix mult(Matrix b) {
 		double[][] C = new double[getNbRows()][b.getNbCols()];
 

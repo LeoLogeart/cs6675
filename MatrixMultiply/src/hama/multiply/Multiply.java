@@ -3,7 +3,6 @@ package hama.multiply;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -14,33 +13,26 @@ import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
 
 public class Multiply {
-	private static final String inputMatrixAPathString = "strassen.patha";
-	private static final String inputMatrixBPathString = "strassen.pathb";
-	private static final String inputMatrixCPathString = "strassen.pathc";
-	private static final String blockSizeString = "strassen.blocksize";
-	private static final String inputMatrixARows = "strassen.nbRowA";
-	private static final String inputMatrixACols = "strassen.nbColA";
-	private static final String inputMatrixBRows = "strassen.nbRowB";
-	private static final String inputMatrixBCols = "strassen.nbColB";
+	private static final String inputMatrixAPathString = "multiply.patha";
+	private static final String inputMatrixBPathString = "multiply.pathb";
+	private static final String inputMatrixCPathString = "multiply.pathc";
+	private static final String blockSizeString = "multiply.blocksize";
+	private static final String inputMatrixARows = "multiply.nbRowA";
+	private static final String inputMatrixACols = "multiply.nbColA";
+	private static final String inputMatrixBRows = "multiply.nbRowB";
+	private static final String inputMatrixBCols = "multiply.nbColB";
 
 	public static class MultiplyBSP
 			extends
-			BSP<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> {
+			BSP<NullWritable, NullWritable, NullWritable, NullWritable, NullWritable> {
 
 		private int nbRowsA;
-		private int nbColsA;
-		private int nbRowsB;
 		private int nbColsB;
 		private int blockSize = 2;
-		private Matrix a;
-		private Matrix b;
-		private HashMap<Integer, List<Matrix>> resBlocks;
-		private HashMap<Integer, List<Integer[]>> indices;
-		private List<Integer[]> masterIndices;
 
 		@Override
 		public void setup(
-				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> peer)
+				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, NullWritable> peer)
 				throws IOException, SyncException, InterruptedException {
 			HamaConfiguration conf = peer.getConfiguration();
 			blockSize = conf.getInt(blockSizeString, 2);
@@ -48,132 +40,67 @@ public class Multiply {
 			/* Values for rows and columns padded */
 			nbRowsA = Utils.getBlockMultiple(conf.getInt(inputMatrixARows, 4),
 					blockSize);
-			nbColsA = Utils.getBlockMultiple(conf.getInt(inputMatrixACols, 4),
-					blockSize);
-			nbRowsB = Utils.getBlockMultiple(conf.getInt(inputMatrixBRows, 4),
-					blockSize);
 			nbColsB = Utils.getBlockMultiple(conf.getInt(inputMatrixBCols, 4),
 					blockSize);
-			a = new Matrix(Utils.readMatrix(
-					new Path(conf.get(inputMatrixAPathString)),
-					peer.getConfiguration(), conf.getInt(inputMatrixARows, 4),
-					conf.getInt(inputMatrixACols, 4), blockSize), nbRowsA,
-					nbColsA);
-			b = new Matrix(Utils.readMatrix(
-					new Path(conf.get(inputMatrixBPathString)),
-					peer.getConfiguration(), conf.getInt(inputMatrixBRows, 4),
-					conf.getInt(inputMatrixBCols, 4), blockSize), nbRowsB,
-					nbColsB);
-			if (peer.getPeerIndex() == 0) {
-				/*System.out.println("A");
-				a.print();
-				System.out.println("B");
-				b.print();
-				System.out.println("A*B");
-				System.out.println(a.mult(b).toString());
-				*/
-				int peerInd = 0;
-				indices = new HashMap<Integer, List<Integer[]>>();
-				for (int i = 0; i < nbRowsA / blockSize; i++) {
-					for (int j = 0; j < nbColsB / blockSize; j++) {
-						for (int k = 0; k < nbColsA / blockSize; k++) {
-							if (peerInd == 0) {
-								if (masterIndices == null) {
-									masterIndices = new ArrayList<Integer[]>();
-								}
-								masterIndices.add(new Integer[] { i, j, k });
-							} else {
-								JobMessage job = new JobMessage(0, i, j, k);
-								peer.send(peer.getPeerName(peerInd), job);
-							}
-
-							List<Integer[]> peerIndices = indices.get(peerInd);
-							if (peerIndices == null) {
-								peerIndices = new ArrayList<Integer[]>();
-							}
-							peerIndices.add(new Integer[] { i, j });
-							indices.put(peerInd, peerIndices);
-							peerInd = (peerInd + 1) % peer.getNumPeers();
-						}
-					}
-				}
-			}
-			peer.sync();
 		}
 
 		@Override
 		public void bsp(
-				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> peer)
+				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, NullWritable> peer)
 				throws IOException, SyncException, InterruptedException {
-			if (peer.getPeerIndex() == 0) {
-				resBlocks = new HashMap<Integer, List<Matrix>>();
-				resBlocks.put(0, new ArrayList<Matrix>());
-				for (Integer[] inds : masterIndices) {
-					Matrix aBlock = a.getBlock(inds[0], inds[2], blockSize);
-					Matrix bBlock = b.getBlock(inds[2], inds[1], blockSize);
-					Matrix resBlock = aBlock.mult(bBlock);
-					List<Matrix> peerBlocks = resBlocks.get(0);
-					peerBlocks.add(resBlock);
-				}
-			} else {
-				JobMessage result = peer.getCurrentMessage();
-				while (result != null) {
-					int i = result.getI();
-					int j = result.getJ();
-					int k = result.getK();
-					Matrix aBlock = a.getBlock(i, k, blockSize);
-					Matrix bBlock = b.getBlock(k, j, blockSize);
-					Matrix resBlock = aBlock.mult(bBlock);
-					JobMessage mes = new JobMessage(1, peer.getPeerIndex(),
-							resBlock);
-					peer.send(peer.getPeerName(0), mes);
-					result = peer.getCurrentMessage();
+			int nbRowsBlocks = nbRowsA / blockSize;
+			int nbColsBlocks = nbColsB / blockSize;
+			int nbBlocks = nbRowsBlocks * nbColsBlocks;
+			int blocksPerPeer = nbBlocks / peer.getNumPeers();
+			int p = peer.getPeerIndex();
+			int lastBlock = (p+1)*blocksPerPeer;
+			if (p==peer.getNumPeers()-1) {
+				lastBlock = nbBlocks;
+			}
+			ArrayList<Block> aBlocks = new ArrayList<Block>();
+			ArrayList<Block> bBlocks = new ArrayList<Block>();
+			for (int block = p*blocksPerPeer; block<lastBlock; block++){
+				int i = block/nbColsBlocks;
+				int j = block%nbColsBlocks;			
+				for (int k = 0; k < nbRowsBlocks; k++) {
+					Block aBlock = new Block(i, k, blockSize);
+					aBlocks.add(aBlock);
+					Block bBlock = new Block(k,j,blockSize);
+					bBlocks.add(bBlock);
 				}
 			}
-			peer.sync();
-		}
+			
+			int aILast = ((lastBlock-1)/nbColsBlocks)*blockSize+blockSize;
+			int bILast = nbRowsBlocks*blockSize;
+			
+			HamaConfiguration conf = peer.getConfiguration();
+			int rows = conf.getInt(inputMatrixARows, 4);
+			int cols = conf.getInt(inputMatrixACols, 4);
 
-		@Override
-		public void cleanup(
-				BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, JobMessage> peer)
-				throws IOException {
-			if (peer.getPeerIndex() == 0) {
-				JobMessage result = peer.getCurrentMessage();
-				while (result != null) {
-					int peerInd = result.getSender();
-					Matrix block = result.getResult();
-					List<Matrix> peerResBlocks = resBlocks.get(peerInd);
-					if (peerResBlocks == null) {
-						peerResBlocks = new ArrayList<Matrix>();
-					}
-					peerResBlocks.add(block);
-					resBlocks.put(peerInd, peerResBlocks);
-					result = peer.getCurrentMessage();
+			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixAPathString)), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
+			rows = conf.getInt(inputMatrixBRows, 4);
+			cols = conf.getInt(inputMatrixBCols, 4);
+			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
+			
+			HashMap<String, Matrix> resBlocks = new HashMap<String, Matrix>();
+			
+			for (int b = 0; b<aBlocks.size(); b++){
+				Block aBlock = aBlocks.get(b);
+				Block bBlock = bBlocks.get(b);
+				String ind = aBlock.getI() + "," + bBlock.getJ();
+				Matrix resBlock = resBlocks.get(ind);
+				if (resBlock==null){
+					resBlock = new Matrix(blockSize,blockSize);
+					resBlock.zeroes();
 				}
-
-				Matrix[][] cBlocks = new Matrix[nbRowsA / blockSize][nbColsB
-						/ blockSize];
-				for (int i = 0; i < nbRowsA / blockSize; i++) {
-					for (int j = 0; j < nbColsB / blockSize; j++) {
-						cBlocks[i][j] = new Matrix(blockSize, blockSize);
-						cBlocks[i][j].zeroes();
-					}
-				}
-				for (Integer peerInd : indices.keySet()) {
-					List<Matrix> peerResBlocks = resBlocks.get(peerInd);
-					List<Integer[]> peerIndices = indices.get(peerInd);
-					for (int i = 0; i < peerResBlocks.size(); i++) {
-						Matrix resBlock = peerResBlocks.get(i);
-						Integer[] inds = peerIndices.get(i);
-						cBlocks[inds[0]][inds[1]] = cBlocks[inds[0]][inds[1]]
-								.sum(resBlock);
-					}
-				}
-
-				Matrix c = new Matrix(cBlocks, nbRowsA, nbColsB, blockSize);
-				HamaConfiguration conf = peer.getConfiguration();
-				Utils.writeMatrix(c.getValues(), new Path(conf.get(inputMatrixCPathString)), peer
-						.getConfiguration());
+				resBlock = resBlock.sum(aBlock.getBlock().mult(bBlock.getBlock()));
+				resBlocks.put(ind, resBlock);
+			}
+			
+			for (String ind : resBlocks.keySet()){
+				Matrix block = resBlocks.get(ind);
+				Path path = new Path(conf.get(inputMatrixCPathString)+"/"+ind);
+				Utils.writeMatrix(block.getValues(), path, conf);
 			}
 		}
 	}
@@ -182,11 +109,11 @@ public class Multiply {
 		HamaConfiguration conf = new HamaConfiguration();
 		BSPJob bsp = new BSPJob(conf);
 		// Set the job name
-		bsp.setJobName("Multiply");
+		bsp.setJobName("Standard Multiply");
 		bsp.setBspClass(MultiplyBSP.class);
 		bsp.setJar("multiply.jar");
 
-		if (args.length < 6 || args.length > 10) {
+		if (args.length < 7 || args.length > 9) {
 			printUsage();
 			return;
 		} else {
@@ -201,14 +128,6 @@ public class Multiply {
 					+ (System.currentTimeMillis() - startTime) / 1000.0
 					+ " seconds.");
 		}
-		/*
-		double[][] cValues = Utils.readMatrix(new Path(args[7]), conf,
-				Integer.parseInt(args[1]), Integer.parseInt(args[5]),
-				Integer.parseInt(args[9]));
-		Matrix c = new Matrix(cValues, Integer.parseInt(args[1]),
-				Integer.parseInt(args[5]));
-		c.print();*/
-
 	}
 
 	private static int parseArgs(String[] args, HamaConfiguration conf,
@@ -224,11 +143,11 @@ public class Multiply {
 		}
 		conf.setInt(inputMatrixBCols, Integer.parseInt(args[5]));
 		bsp.setOutputPath(new Path(args[6]));
-		conf.set(inputMatrixCPathString, args[7]);
-		if (args.length > 8) {
-			bsp.setNumBspTask(Integer.parseInt(args[8]));
-			if (args.length > 9) {
-				int n = Integer.parseInt(args[9]);
+		conf.set(inputMatrixCPathString, args[6]);
+		if (args.length > 7) {
+			bsp.setNumBspTask(Integer.parseInt(args[7]));
+			if (args.length > 8) {
+				int n = Integer.parseInt(args[8]);
 				if ((n & (n - 1)) != 0) {
 					System.out.println("The block size must be a power of two");
 					return 1;
@@ -251,7 +170,7 @@ public class Multiply {
 				}
 				n /= 2;
 
-				int nbPeers = Integer.parseInt(args[8]);
+				int nbPeers = Integer.parseInt(args[7]);
 				/*
 				 * lower the block size to make sure every peer has at least a
 				 * task
@@ -290,7 +209,7 @@ public class Multiply {
 
 	private static void printUsage() {
 		System.out
-				.println("Usage: multiply <path A> <number rows A> <number columns A>"
-						+ "<path B> <number rows B> <number columns B> <path output> <path C> [number of tasks] [block size]");
+				.println("Usage: Multiply <path A> <number rows A> <number columns A>"
+						+ "<path B> <number rows B> <number columns B> <path output> [number of tasks] [block size]");
 	}
 }
