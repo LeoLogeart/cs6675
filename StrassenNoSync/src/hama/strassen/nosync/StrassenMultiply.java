@@ -82,7 +82,7 @@ public class StrassenMultiply {
 			cols = conf.getInt(inputMatrixBCols, 4);
 			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
 			
-			HashMap<String, Matrix> resBlocks = new HashMap<>();
+			HashMap<String, Matrix> resBlocks = new HashMap<String, Matrix>();
 			
 			for (int b = 0; b<aBlocks.size(); b++){
 				Block aBlock = aBlocks.get(b);

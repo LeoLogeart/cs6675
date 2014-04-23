@@ -160,8 +160,7 @@ public class MatUtils {
 							+ (System.currentTimeMillis() - startTime) / 1000.0
 							+ " seconds.");
 				}
-			} catch (ClassNotFoundException | IOException
-					| InterruptedException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		} else {
