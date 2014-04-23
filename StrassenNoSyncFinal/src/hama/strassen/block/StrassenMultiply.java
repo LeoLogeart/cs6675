@@ -93,14 +93,13 @@ public class StrassenMultiply {
 					resBlock = new Matrix(blockSize,blockSize);
 					resBlock.zeroes();
 				}
-				resBlock.setBlockIndex(aBlock.getI(), bBlock.getJ());
 				resBlock = resBlock.sum(aBlock.getBlock().strassen(bBlock.getBlock()));
 				resBlocks.put(ind, resBlock);
 			}
 			
 			for (String ind : resBlocks.keySet()){
 				Matrix block = resBlocks.get(ind);
-				Path path = new Path(conf.get(inputMatrixCPathString)+"/"+conf.get(inputMatrixCPathString)+block.getIndI()+"_"+block.getIndJ()+".mat");
+				Path path = new Path(conf.get(inputMatrixCPathString)+"/"+conf.get(inputMatrixCPathString)+ind.split(",")[0]+"_"+ind.split(",")[1]+".mat");
 				Utils.writeMatrix(block.getValues(), path, conf);
 			}
 		}
