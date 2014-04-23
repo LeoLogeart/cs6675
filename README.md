@@ -3,9 +3,8 @@ cs6675
 This project's goal is to implement the strassen algorithm for matrix multiplication using the Hama framework.
 
 We created 4 eclipse project during the course of our development and here is their explanation:
-
-----------------------------------------------
-matUtils
+======
+## matUtils
 
 This project was created as a toolbox to manage our data. It contains 5 diferent tools:
   
@@ -26,7 +25,7 @@ hama -jar utils.jar hamaSetup <number of nodes>
 
 
 
-----------------------------------------------
-Strassen
+======
+## Strassen
 
 This project 
