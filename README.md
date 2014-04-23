@@ -3,7 +3,6 @@ cs6675
 This project's goal is to implement the strassen algorithm for matrix multiplication using the Hama framework.
 We created 4 eclipse project during the course of our development and here is their explanation:
 
-======
 ## matUtils
 
 This project was created as a toolbox to manage our data. It contains 5 diferent tools:
@@ -24,8 +23,16 @@ hama -jar utils.jar cmp <path matrix 1> <path matrix 2> <mat rows size> <mat col
 hama -jar utils.jar hamaSetup <number of nodes>
 
 
-
-======
 ## Strassen
 
-This project 
+In this project, the master node assigns jobs to nodes and sends information to each node on what block to retrieve in order to compute the strassen algorithm on submatrices of our input A and B
+Usage: StrassenMultiply <path A> <number rows A> <number columns A> <path B> <number rows B> <number columns B> <path output> <path C> [number of tasks] [block size]
+
+## StrassenNoSync
+This project marks an improvement of the previous one since no communication between nodes is required. Based on its peer number, each node retrieves the block it needs.
+Usage: StrassenMultiply <path A> <number rows A> <number columns A> <path B> <number rows B> <number columns B> <path output> [number of tasks] [block size]
+
+
+## StrassenFinal
+This last optimization manages the input matrices A and B as blocks (see matUtils genBlock). By generating input matrices in the form of blocks, each peer accesses a different file and does not have to parse them as it was previously done.
+Usage: StrassenMultiply <path A> <number rows A> <number columns A> <path B> <number rows B> <number columns B> <path output> <block size> [number of tasks]
