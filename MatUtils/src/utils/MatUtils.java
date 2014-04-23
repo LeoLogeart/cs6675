@@ -91,6 +91,28 @@ public class MatUtils {
 					colSize, new Random(), 0, 100);
 			MatrixGenerator.writeMatrix2(matrix, outputPath,
 					new HamaConfiguration());
+		}else if (args[0].equals("genBlock")) {
+			if(args.length!=5){
+				printUsage();
+				return;
+			}
+			int rowSize = Integer.parseInt(args[1]);
+			int colSize = Integer.parseInt(args[2]);
+			int blockSize = Integer.parseInt(args[3]);
+			String outputPath = args[4];
+			int numBlockR = (int) Math.ceil((double)rowSize/(double)blockSize) ;
+			int numBlockC = (int) Math.ceil((double)colSize/(double)blockSize);
+			double[][] matrix;
+			for(int i = 0 ;i<numBlockR;i++){
+				for(int j=0;j<numBlockC;j++){
+					matrix = MatrixGenerator.createRandomMatrix(blockSize,
+							blockSize, new Random(), 0, 100);
+					MatrixGenerator.writeMatrix(matrix, new Path(outputPath+(i*blockSize)+"_"+(j*blockSize)+".mat"),
+									new HamaConfiguration());
+				}
+			}
+			 
+			
 		}else if (args[0].equals("cmp")) {
 			if(args.length!=5){
 				printUsage();
@@ -153,6 +175,7 @@ public class MatUtils {
 				.println("hama -jar utils.jar read <path to matrix> <rows size> <column size>");
 		System.out
 				.println("hama -jar utils.jar gen <row size> <column size> <output path>");
+		System.out.println("hama -jar utils.jar genBlock <row size> <column size> <block size> <output path>");
 		System.out
 				.println("hama -jar utils.jar cmp <path matrix 1> <path matrix 2> <mat rows size> <mat column size>");
 		System.out.println("hama -jar utils.jar hamaSetup <number of nodes>");

@@ -77,10 +77,10 @@ public class StrassenMultiply {
 			int rows = conf.getInt(inputMatrixARows, 4);
 			int cols = conf.getInt(inputMatrixACols, 4);
 
-			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixAPathString)), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
+			Utils.readMatrixBlocks(conf.get(inputMatrixAPathString), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
 			rows = conf.getInt(inputMatrixBRows, 4);
 			cols = conf.getInt(inputMatrixBCols, 4);
-			Utils.readMatrixBlocks(new Path(conf.get(inputMatrixBPathString)), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
+			Utils.readMatrixBlocks(conf.get(inputMatrixBPathString), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
 			
 			HashMap<String, Matrix> resBlocks = new HashMap<>();
 			

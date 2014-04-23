@@ -83,32 +83,28 @@ public class Utils {
 		return matrix;
 	}
 
-	public static void readMatrixBlocks(Path path, HamaConfiguration conf,
+	//TODO get rid of unused args
+	public static void readMatrixBlocks(String path, HamaConfiguration conf,
 			int rows, int cols, int blockSize, int lastI,
 			List<Block> emptyBlocks) {
 		SequenceFile.Reader reader = null;
 		try {
 			FileSystem fs = FileSystem.get(conf);
-			reader = new SequenceFile.Reader(fs, path, conf);
 			VectorWritable row = new VectorWritable();
 			IntWritable i = new IntWritable();
-			while (reader.next(i, row) && i.get() < lastI) {
-				for (Block b : emptyBlocks) {
-					int blockI = b.getI();
-					int blockJ = b.getJ();
-					if (i.get() >= blockI * blockSize
-							&& (i.get() < blockI * blockSize + blockSize)) {
-						DoubleVector v = row.getVector();
-						for (int j = blockJ * blockSize; j < blockJ * blockSize
-								+ blockSize; j++) {
-							if (j < cols) {
-								b.setValue(i.get() % blockSize, j % blockSize,
-										v.get(j));
-							}
-						}
+			for (Block b : emptyBlocks) {
+				int bi = b.getI();
+				int bj = b.getJ();
+				reader = new SequenceFile.Reader(fs, new Path(path + bi + "_"
+						+ bj+".mat"), conf);
+				while (reader.next(i, row)) {
+					DoubleVector v = row.getVector();
+					for (int k = 0; k < v.getDimension(); k++) {
+						b.setValue(i.get(), k, v.get(k));
 					}
 				}
 			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
