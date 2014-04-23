@@ -77,10 +77,14 @@ public class StrassenMultiply {
 			int rows = conf.getInt(inputMatrixARows, 4);
 			int cols = conf.getInt(inputMatrixACols, 4);
 
-			Utils.readMatrixBlocks(conf.get(inputMatrixAPathString), peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
+			String[] parts = conf.get(inputMatrixAPathString).split("/");
+			String aName = parts[parts.length-1];
+			Utils.readMatrixBlocks(conf.get(inputMatrixAPathString)+"/"+aName, peer.getConfiguration(), rows, cols, blockSize, aILast, aBlocks);
 			rows = conf.getInt(inputMatrixBRows, 4);
 			cols = conf.getInt(inputMatrixBCols, 4);
-			Utils.readMatrixBlocks(conf.get(inputMatrixBPathString), peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
+			parts = conf.get(inputMatrixBPathString).split("/");
+			String bName = parts[parts.length-1];
+			Utils.readMatrixBlocks(conf.get(inputMatrixBPathString)+"/"+bName, peer.getConfiguration(), rows, cols, blockSize, bILast, bBlocks);
 			
 			HashMap<String, Matrix> resBlocks = new HashMap<String, Matrix>();
 			
@@ -97,9 +101,11 @@ public class StrassenMultiply {
 				resBlocks.put(ind, resBlock);
 			}
 			
+			parts = conf.get(inputMatrixCPathString).split("/");
+			String cName = parts[parts.length-1];
 			for (String ind : resBlocks.keySet()){
 				Matrix block = resBlocks.get(ind);
-				Path path = new Path(conf.get(inputMatrixCPathString)+"/"+conf.get(inputMatrixCPathString)+ind.split(",")[0]+"_"+ind.split(",")[1]+".mat");
+				Path path = new Path(conf.get(inputMatrixCPathString)+"/"+cName+ind.split(",")[0]+"_"+ind.split(",")[1]+".mat");
 				Utils.writeMatrix(block.getValues(), path, conf);
 			}
 		}
@@ -111,7 +117,7 @@ public class StrassenMultiply {
 		// Set the job name
 		bsp.setJobName("Strassen Multiply");
 		bsp.setBspClass(StrassenBSP.class);
-		bsp.setJar("strassen.jar");
+		//bsp.setJar("strassen.jar");
 
 		if (args.length < 8 || args.length > 9) {
 			printUsage();
