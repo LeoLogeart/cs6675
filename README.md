@@ -2,6 +2,7 @@ cs6675
 ======
 This project's goal is to implement the strassen algorithm for matrix multiplication using the Hama framework.
 We created 4 eclipse project during the course of our development and here is their explanation:
+
 ======
 ## matUtils
 
