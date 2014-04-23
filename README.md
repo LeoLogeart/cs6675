@@ -42,7 +42,7 @@ This project marks an improvement of the previous one since no communication bet
     hama -jar strassen.jar <path A> <number rows A> <number columns A> <path B> <number rows B> <number columns B> <path output> [number of tasks] [block size]
 
 
-## StrassenFinal
+## StrassenNoSyncFinal
 This last optimization manages the input matrices A and B as blocks (see matUtils genBlock). By generating input matrices in the form of blocks, each peer accesses a different file and does not have to parse them as it was previously done.
 
     hama -jar strassen.jar <path A> <number rows A> <number columns A> <path B> <number rows B> <number columns B> <path output> <block size> [number of tasks]
