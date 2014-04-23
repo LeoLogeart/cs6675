@@ -1,4 +1,4 @@
-package hama.strassen.nosync;
+package hama.strassen.block;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -93,13 +93,14 @@ public class StrassenMultiply {
 					resBlock = new Matrix(blockSize,blockSize);
 					resBlock.zeroes();
 				}
+				resBlock.setBlockIndex(aBlock.getI(), bBlock.getJ());
 				resBlock = resBlock.sum(aBlock.getBlock().strassen(bBlock.getBlock()));
 				resBlocks.put(ind, resBlock);
 			}
 			
 			for (String ind : resBlocks.keySet()){
 				Matrix block = resBlocks.get(ind);
-				Path path = new Path(conf.get(inputMatrixCPathString)+"/"+ind);
+				Path path = new Path(conf.get(inputMatrixCPathString)+block.getIndI()+"_"+block.getIndJ()+".mat");
 				Utils.writeMatrix(block.getValues(), path, conf);
 			}
 		}
@@ -111,9 +112,9 @@ public class StrassenMultiply {
 		// Set the job name
 		bsp.setJobName("Strassen Multiply");
 		bsp.setBspClass(StrassenBSP.class);
-		//bsp.setJar("strassen.jar");
+		bsp.setJar("strassen.jar");
 
-		if (args.length < 7 || args.length > 9) {
+		if (args.length < 8 || args.length > 9) {
 			printUsage();
 			return;
 		} else {
@@ -144,72 +145,19 @@ public class StrassenMultiply {
 		conf.setInt(inputMatrixBCols, Integer.parseInt(args[5]));
 		bsp.setOutputPath(new Path(args[6]));
 		conf.set(inputMatrixCPathString, args[6]);
-		if (args.length > 7) {
-			bsp.setNumBspTask(Integer.parseInt(args[7]));
-			if (args.length > 8) {
-				int n = Integer.parseInt(args[8]);
-				if ((n & (n - 1)) != 0) {
-					System.out.println("The block size must be a power of two");
-					return 1;
-				}
-				conf.setInt(blockSizeString, n);
-			} else {
-				/*
-				 * set the size of blocks depending on the number of peers and
-				 * matrices sizes
-				 */
-				/*
-				 * let's assume square matrices : nbTasks =
-				 * (PaddedRowSize/sizeBlock)^3 ,
-				 */
-				int rows = conf.getInt(inputMatrixARows, 4);
-				int n = 2;
-				/* set n as the largest power of two smaller than row/2 */
-				while (n < rows / 2) {
-					n *= 2;
-				}
-				n /= 2;
-
-				int nbPeers = Integer.parseInt(args[7]);
-				/*
-				 * lower the block size to make sure every peer has at least a
-				 * task
-				 */
-				while (Math.pow(rows / n, 3) < nbPeers) {
-					n /= 2;
-				}
-				/* taking the future padding into account */
-				n *= 2;
-				System.out.println("block size :" + n);
-				conf.setInt(blockSizeString, n);
-			}
-		} else {
-			/*
-			 * set the size of blocks depending on the number of peers and
-			 * matrices sizes
-			 */
-			/*
-			 * let's assume square matrices : nbTasks =
-			 * (PaddedRowSize/sizeBlock)^3 ,
-			 */
-			int rows = conf.getInt(inputMatrixARows, 4);
-			int n = 2;
-			/* set n as the largest power of two smaller than row/4 */
-			while (n < rows / 4) {
-				n *= 2;
-			}
-			conf.setInt(blockSizeString, n);
-			int tasks = (int) Math.pow((int) (rows / n), 3);
-			System.out.println("block size :" + n);
-			System.out.println("peers :" + tasks);
-			bsp.setNumBspTask(tasks);
+		conf.setInt(blockSizeString, Integer.parseInt(args[7]));
+		if (args.length > 8) {
+			bsp.setNumBspTask(Integer.parseInt(args[8]));
+		}  else {
+			bsp.setNumBspTask(Integer.parseInt(args[1])/Integer.parseInt(args[7]));
 		}
+		
 		return 0;
 	}
 
 	private static void printUsage() {
 		System.out
 				.println("Usage: StrassenMultiply <path A> <number rows A> <number columns A>"
-						+ "<path B> <number rows B> <number columns B> <path output> [number of tasks] [block size]");
+						+ "<path B> <number rows B> <number columns B> <path output> <block size> [number of tasks]");
 	}
 }

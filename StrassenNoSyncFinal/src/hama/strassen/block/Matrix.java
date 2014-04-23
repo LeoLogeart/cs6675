@@ -1,4 +1,4 @@
-package hama.strassen.nosync;
+package hama.strassen.block;
 
 import java.util.Arrays;
 
@@ -7,6 +7,8 @@ public class Matrix{
 	private double[][] values;
 	private int nbRows;
 	private int nbCols;
+	private int IndJ;
+	private int indI;
 
 	public Matrix(double[][] values, int nbRows, int nbCols) {
 		this.values = values;
@@ -219,5 +221,26 @@ public class Matrix{
 			}
 		}
 		
+	}
+
+	public void setBlockIndex(int i, int j) {
+		this.setIndI(i);
+		this.setIndJ(j);
+	}
+
+	public int getIndJ() {
+		return IndJ;
+	}
+
+	public void setIndJ(int indJ) {
+		IndJ = indJ;
+	}
+
+	public int getIndI() {
+		return indI;
+	}
+
+	public void setIndI(int indI) {
+		this.indI = indI;
 	}
 }

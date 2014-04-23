@@ -1,4 +1,4 @@
-package hama.strassen.nosync;
+package hama.strassen.block;
 
 public class Block {
 	
