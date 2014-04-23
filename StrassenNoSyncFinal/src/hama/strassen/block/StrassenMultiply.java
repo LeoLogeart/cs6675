@@ -100,7 +100,7 @@ public class StrassenMultiply {
 			
 			for (String ind : resBlocks.keySet()){
 				Matrix block = resBlocks.get(ind);
-				Path path = new Path(conf.get(inputMatrixCPathString)+block.getIndI()+"_"+block.getIndJ()+".mat");
+				Path path = new Path(conf.get(inputMatrixCPathString)+"/"+conf.get(inputMatrixCPathString)+block.getIndI()+"_"+block.getIndJ()+".mat");
 				Utils.writeMatrix(block.getValues(), path, conf);
 			}
 		}
