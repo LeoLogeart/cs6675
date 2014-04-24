@@ -111,7 +111,7 @@ public class StrassenMultiply {
 		// Set the job name
 		bsp.setJobName("Strassen Multiply");
 		bsp.setBspClass(StrassenBSP.class);
-		//bsp.setJar("strassen.jar");
+		bsp.setJar("strassenNoSync.jar");
 
 		if (args.length < 7 || args.length > 9) {
 			printUsage();
