@@ -39,10 +39,10 @@ In this project, the master node assigns jobs to nodes and sends information to 
 ## StrassenNoSync
 This project marks an improvement of the previous one since no communication between nodes is required. Based on its peer number, each node retrieves the block it needs.
 
-    hama -jar strassen.jar <path A> <number rows A> <number columns A> <path B> <number rows B> <number columns B> <path output> [number of tasks] [block size]
+    hama -jar strassenNoSync.jar <path A> <number rows A> <number columns A> <path B> <number rows B> <number columns B> <path output> [number of tasks] [block size]
 
 
 ## StrassenNoSyncFinal
 This last optimization manages the input matrices A and B as blocks (see matUtils genBlock). By generating input matrices in the form of blocks, each peer accesses a different file and does not have to parse them as it was previously done.
 
-    hama -jar strassen.jar <path A> <number rows A> <number columns A> <path B> <number rows B> <number columns B> <path output> <block size> [number of tasks]
+    hama -jar strassenNoSyncFinal.jar <path A> <number rows A> <number columns A> <path B> <number rows B> <number columns B> <path output> <block size> [number of tasks]
